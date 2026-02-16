@@ -30,6 +30,7 @@ import { ProgressSliderComponent } from './component/progress-slider/progress-sl
 import { KpiComponent } from './component/kpi/kpi.component';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { TeamsGroupsEditorModule } from './component/teams-groups-editor/teams-groups-editor.module';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @NgModule({
   declarations: [
@@ -65,6 +66,7 @@ import { TeamsGroupsEditorModule } from './component/teams-groups-editor/teams-g
     FormsModule,
     HttpClientModule,
     TeamsGroupsEditorModule,
+    MatTooltipModule,
   ],
   providers: [
     LoaderService,

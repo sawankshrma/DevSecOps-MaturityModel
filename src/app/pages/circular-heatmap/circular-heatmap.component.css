@@ -131,15 +131,19 @@ app-progress-slider {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  padding: 1rem;  
+  padding: 1rem;
 }
 .filter-container {
   position: relative;
 }
 
 .smaller-italics {
-    font-size: smaller;
-    font-style: italic;
+  font-size: smaller;
+  font-style: italic;
+}
+
+mat-chip {
+  cursor: pointer;
 }
 
 button.filter-toggle {
@@ -175,31 +179,31 @@ button.filter-toggle {
 
 @media only screen and (max-width: 750px) {
   .heatmapClass {
-      grid-template-rows: auto auto 1fr auto;
-      grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: 1fr;
   }
-  
+
   .team-filter, .heatmapChart, .footer-buttons {
-      grid-column: 1;
+    grid-column: 1;
   }
-  
+
   .team-filter {
-      grid-row: 1;
-      padding: 0.4rem;
+    grid-row: 1;
+    padding: 0.4rem;
   }
-  
+
   .mat-chip-list {
-      padding: 0.4rem;
+    padding: 0.4rem;
   }
 
   .heatmapChart {
-      grid-row: 2;
+    grid-row: 2;
   }
 
   #chart {
-      max-width: max(60vh, 60vw);
+    max-width: max(60vh, 60vw);
   }
-  
+
   .overlay-details {
     width: 100%;
   }

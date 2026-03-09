@@ -22,7 +22,9 @@
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": ["yamljs"],
+            "allowedCommonJsDependencies": [
+              "yamljs"
+            ],
             "assets": [
               "src/favicon.ico",
               "src/assets"
@@ -114,8 +116,9 @@
       }
     }
   },
-  "defaultProject": "DSOMM",
   "cli": {
-    "defaultCollection": "@angular-eslint/schematics"
+    "schematicCollections": [
+      "@angular-eslint/schematics"
+    ]
   }
 }

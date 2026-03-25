@@ -67,9 +67,9 @@
           <b>Dependencies</b>
         </mat-panel-title>
       </mat-expansion-panel-header>
-      <div *ngIf="currentActivity?.name">
+      <div *ngIf="currentActivity.name">
         <app-dependency-graph
-          [activityName]="currentActivity?.name || ''"
+          [activityName]="currentActivity.name || ''"
           (activityClicked)="onActivityClicked($event)">
         </app-dependency-graph>
       </div>
@@ -280,7 +280,7 @@
         </div>
       </div>
       <span
-        >In other frameworks and standards the '{{ currentActivity?.name }}' activity is part of
+        >In other frameworks and standards the '{{ currentActivity.name }}' activity is part of
         sections above.</span
       >
     </mat-expansion-panel>

@@ -84,7 +84,10 @@
       <!-- No data message -->
       <tr class="mat-row" *matNoDataRow>
         <td class="mat-cell" [attr.colspan]="allColumnNames.length">
-          <em>Currently no activities in progress for {{ info[infoTitle] ? info[infoTitle].teams.join(', ') : '' }}</em>
+          <em
+            >Currently no activities in progress for
+            {{ info[infoTitle] ? info[infoTitle].teams.join(', ') : '' }}</em
+          >
         </td>
       </tr>
 

@@ -6,15 +6,18 @@
   transition: background 300ms cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@include mat.core();
+@include mat.elevation-classes();
+@include mat.app-background();
 
 html {
   @include mat.all-component-themes(m3.$light-theme);
 }
 
 @mixin component-overrides {
-  background-color: var(--background-base);
-  color: var(--text-primary);
+  & {
+    background-color: var(--background-base);
+    color: var(--text-primary);
+  }
 
   .title-button,
   h1, h2, h3, h4, h5, h6 {
@@ -290,8 +293,6 @@ html {
 }
 
 body.light-theme {
-  @include component-overrides;
-
   --text-primary: #000000;
   --text-secondary: #666666;
   --text-tertiary: #bbbbbb;
@@ -317,12 +318,11 @@ body.light-theme {
   --dependency-mainnode-fill: #4caf50;
   --dependency-predecessor-fill: #deeedeff;
   --dependency-successor-fill: #fdfdfdff;
+
+  @include component-overrides;
 }
 
 body.dark-theme {
-  @include mat.all-component-colors(m3.$dark-theme);
-  @include component-overrides;
-
   --text-primary: #e8e8e8;
   --text-secondary: #a0a0a0;
   --text-tertiary: #616161;
@@ -348,6 +348,9 @@ body.dark-theme {
   --dependency-mainnode-fill: rgb(107, 190, 107);
   --dependency-predecessor-fill: rgb(160, 200, 160);
   --dependency-successor-fill: rgb(185, 185, 185);
+
+  @include mat.all-component-colors(m3.$dark-theme);
+  @include component-overrides;
 }
 
 // ----------------------------------------------

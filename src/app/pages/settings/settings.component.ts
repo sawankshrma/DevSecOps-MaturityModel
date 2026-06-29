@@ -56,27 +56,26 @@ interface ProgressDefinitionForm {
 }
 
 @Component({
-  selector: 'app-settings',
-  templateUrl: './settings.component.html',
-  styleUrls: ['./settings.component.css'],
-  standalone: true,
-  imports: [
-    TopHeaderComponent,
-    MatCardModule,
-    MatFormFieldModule,
-    MatSelectModule,
-    FormsModule,
-    NgFor,
-    MatOptionModule,
-    MatSliderModule,
-    NgIf,
-    MatButtonModule,
-    MatIconModule,
-    ReactiveFormsModule,
-    MatInputModule,
-    TextFieldModule,
-    MatProgressSpinnerModule,
-  ],
+    selector: 'app-settings',
+    templateUrl: './settings.component.html',
+    styleUrls: ['./settings.component.css'],
+    imports: [
+        TopHeaderComponent,
+        MatCardModule,
+        MatFormFieldModule,
+        MatSelectModule,
+        FormsModule,
+        NgFor,
+        MatOptionModule,
+        MatSliderModule,
+        NgIf,
+        MatButtonModule,
+        MatIconModule,
+        ReactiveFormsModule,
+        MatInputModule,
+        TextFieldModule,
+        MatProgressSpinnerModule,
+    ]
 })
 export class SettingsComponent implements OnInit {
   meta!: MetaStore;

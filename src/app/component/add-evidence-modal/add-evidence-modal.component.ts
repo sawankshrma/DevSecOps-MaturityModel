@@ -21,25 +21,24 @@ export interface AddEvidenceModalData {
 }
 
 @Component({
-  selector: 'app-add-evidence-modal',
-  templateUrl: './add-evidence-modal.component.html',
-  styleUrls: ['./add-evidence-modal.component.css'],
-  standalone: true,
-  imports: [
-    MatDialogModule,
-    TeamSelectorComponent,
-    NgIf,
-    MatFormFieldModule,
-    MatDividerModule,
-    MatInputModule,
-    FormsModule,
-    NgFor,
-    MatSelectModule,
-    MatOptionModule,
-    MatButtonModule,
-    MatTooltipModule,
-    MatIconModule,
-  ],
+    selector: 'app-add-evidence-modal',
+    templateUrl: './add-evidence-modal.component.html',
+    styleUrls: ['./add-evidence-modal.component.css'],
+    imports: [
+        MatDialogModule,
+        TeamSelectorComponent,
+        NgIf,
+        MatFormFieldModule,
+        MatDividerModule,
+        MatInputModule,
+        FormsModule,
+        NgFor,
+        MatSelectModule,
+        MatOptionModule,
+        MatButtonModule,
+        MatTooltipModule,
+        MatIconModule,
+    ]
 })
 export class AddEvidenceModalComponent {
   activityUuid: string;

@@ -14,11 +14,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { NgFor } from '@angular/common';
 
 @Component({
-  selector: 'app-modal-message',
-  templateUrl: './modal-message.component.html',
-  styleUrls: ['./modal-message.component.css'],
-  standalone: true,
-  imports: [MatDialogModule, NgFor, MatButtonModule],
+    selector: 'app-modal-message',
+    templateUrl: './modal-message.component.html',
+    styleUrls: ['./modal-message.component.css'],
+    imports: [MatDialogModule, NgFor, MatButtonModule]
 })
 export class ModalMessageComponent implements OnInit {
   data: DialogInfo;

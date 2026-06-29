@@ -21,19 +21,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { NgIf, NgFor } from '@angular/common';
 
 @Component({
-  selector: 'app-activity-description',
-  templateUrl: './activity-description.component.html',
-  styleUrls: ['./activity-description.component.css'],
-  standalone: true,
-  imports: [
-    NgIf,
-    MatIconModule,
-    MatButtonModule,
-    MatExpansionModule,
-    DependencyGraphComponent,
-    NgFor,
-    EvidencePanelComponent,
-  ],
+    selector: 'app-activity-description',
+    templateUrl: './activity-description.component.html',
+    styleUrls: ['./activity-description.component.css'],
+    imports: [
+        NgIf,
+        MatIconModule,
+        MatButtonModule,
+        MatExpansionModule,
+        DependencyGraphComponent,
+        NgFor,
+        EvidencePanelComponent,
+    ]
 })
 export class ActivityDescriptionComponent implements OnInit, OnChanges {
   @Input() activity: Activity | null = null;

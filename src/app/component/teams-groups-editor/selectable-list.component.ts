@@ -6,11 +6,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { NgIf, NgFor } from '@angular/common';
 
 @Component({
-  selector: 'app-selectable-list',
-  templateUrl: './selectable-list.component.html',
-  styleUrls: ['./selectable-list.component.css'],
-  standalone: true,
-  imports: [NgIf, MatButtonModule, MatIconModule, NgFor, FormsModule],
+    selector: 'app-selectable-list',
+    templateUrl: './selectable-list.component.html',
+    styleUrls: ['./selectable-list.component.css'],
+    imports: [NgIf, MatButtonModule, MatIconModule, NgFor, FormsModule]
 })
 export class SelectableListComponent {
   @Input() title: string = '';

@@ -30,20 +30,19 @@ type LevelKey = keyof Pick<MatrixRow, 'level1' | 'level2' | 'level3' | 'level4' 
 
 @UntilDestroy()
 @Component({
-  selector: 'app-matrix',
-  templateUrl: './matrix.component.html',
-  styleUrls: ['./matrix.component.css'],
-  standalone: true,
-  imports: [
-    TopHeaderComponent,
-    MatChipsModule,
-    NgFor,
-    MatDividerModule,
-    MatTableModule,
-    MatIconModule,
-    NgIf,
-    KeyValuePipe,
-  ],
+    selector: 'app-matrix',
+    templateUrl: './matrix.component.html',
+    styleUrls: ['./matrix.component.css'],
+    imports: [
+        TopHeaderComponent,
+        MatChipsModule,
+        NgFor,
+        MatDividerModule,
+        MatTableModule,
+        MatIconModule,
+        NgIf,
+        KeyValuePipe,
+    ]
 })
 export class MatrixComponent implements OnInit {
   Routing: string = '/activity-description';

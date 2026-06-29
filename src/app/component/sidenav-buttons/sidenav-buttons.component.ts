@@ -9,11 +9,10 @@ import { NgFor } from '@angular/common';
 import { MatListModule } from '@angular/material/list';
 
 @Component({
-  selector: 'app-sidenav-buttons',
-  templateUrl: './sidenav-buttons.component.html',
-  styleUrls: ['./sidenav-buttons.component.css'],
-  standalone: true,
-  imports: [MatListModule, NgFor, RouterLink, MatIconModule, MatDividerModule],
+    selector: 'app-sidenav-buttons',
+    templateUrl: './sidenav-buttons.component.html',
+    styleUrls: ['./sidenav-buttons.component.css'],
+    imports: [MatListModule, NgFor, RouterLink, MatIconModule, MatDividerModule]
 })
 export class SidenavButtonsComponent {
   Options: string[] = [

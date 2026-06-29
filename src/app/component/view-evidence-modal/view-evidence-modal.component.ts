@@ -9,11 +9,10 @@ export interface ViewEvidenceModalData {
 }
 
 @Component({
-  selector: 'app-view-evidence-modal',
-  templateUrl: './view-evidence-modal.component.html',
-  styleUrls: ['./view-evidence-modal.component.css'],
-  standalone: true,
-  imports: [MatDialogModule, EvidencePanelComponent, MatButtonModule],
+    selector: 'app-view-evidence-modal',
+    templateUrl: './view-evidence-modal.component.html',
+    styleUrls: ['./view-evidence-modal.component.css'],
+    imports: [MatDialogModule, EvidencePanelComponent, MatButtonModule]
 })
 export class ViewEvidenceModalComponent {
   activityUuid: string;

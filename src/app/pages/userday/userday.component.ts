@@ -4,11 +4,10 @@ import { MarkdownViewerComponent } from '../../component/markdown-viewer/markdow
 import { TopHeaderComponent } from '../../component/top-header/top-header.component';
 
 @Component({
-  selector: 'app-userday',
-  templateUrl: './userday.component.html',
-  styleUrls: ['./userday.component.css'],
-  standalone: true,
-  imports: [TopHeaderComponent, MarkdownViewerComponent],
+    selector: 'app-userday',
+    templateUrl: './userday.component.html',
+    styleUrls: ['./userday.component.css'],
+    imports: [TopHeaderComponent, MarkdownViewerComponent]
 })
 export class UserdayComponent implements OnInit {
   constructor() {}

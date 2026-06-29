@@ -54,26 +54,25 @@ enum SortMode {
 }
 
 @Component({
-  selector: 'app-mapping',
-  templateUrl: './mapping.component.html',
-  styleUrls: ['./mapping.component.css'],
-  standalone: true,
-  imports: [
-    TopHeaderComponent,
-    MatFormFieldModule,
-    MatChipsModule,
-    NgFor,
-    MatIconModule,
-    MatInputModule,
-    FormsModule,
-    ReactiveFormsModule,
-    NgIf,
-    MatButtonModule,
-    MatTableModule,
-    MatSortModule,
-    RouterLink,
-    SlicePipe,
-  ],
+    selector: 'app-mapping',
+    templateUrl: './mapping.component.html',
+    styleUrls: ['./mapping.component.css'],
+    imports: [
+        TopHeaderComponent,
+        MatFormFieldModule,
+        MatChipsModule,
+        NgFor,
+        MatIconModule,
+        MatInputModule,
+        FormsModule,
+        ReactiveFormsModule,
+        NgIf,
+        MatButtonModule,
+        MatTableModule,
+        MatSortModule,
+        RouterLink,
+        SlicePipe,
+    ]
 })
 export class MappingComponent implements OnInit, AfterViewInit {
   allMappings: MappingRow[] = [];

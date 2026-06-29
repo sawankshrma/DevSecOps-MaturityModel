@@ -6,11 +6,10 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { NgIf, NgFor, DatePipe } from '@angular/common';
 
 @Component({
-  selector: 'app-evidence-panel',
-  templateUrl: './evidence-panel.component.html',
-  styleUrls: ['./evidence-panel.component.css'],
-  standalone: true,
-  imports: [NgIf, MatExpansionModule, NgFor, MatIconModule, DatePipe],
+    selector: 'app-evidence-panel',
+    templateUrl: './evidence-panel.component.html',
+    styleUrls: ['./evidence-panel.component.css'],
+    imports: [NgIf, MatExpansionModule, NgFor, MatIconModule, DatePipe]
 })
 export class EvidencePanelComponent implements OnChanges {
   @Input() activityUuid: string = '';

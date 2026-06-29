@@ -50,22 +50,21 @@ export interface LevelOverview {
 }
 
 @Component({
-  selector: 'app-report',
-  templateUrl: './report.component.html',
-  styleUrls: ['./report.component.css'],
-  providers: [DatePipe],
-  standalone: true,
-  imports: [
-    TopHeaderComponent,
-    MatButtonModule,
-    MatIconModule,
-    NgIf,
-    TeamSelectorComponent,
-    MatProgressSpinnerModule,
-    NgFor,
-    ColResizeDirective,
-    MatTooltipModule,
-  ],
+    selector: 'app-report',
+    templateUrl: './report.component.html',
+    styleUrls: ['./report.component.css'],
+    providers: [DatePipe],
+    imports: [
+        TopHeaderComponent,
+        MatButtonModule,
+        MatIconModule,
+        NgIf,
+        TeamSelectorComponent,
+        MatProgressSpinnerModule,
+        NgFor,
+        ColResizeDirective,
+        MatTooltipModule,
+    ]
 })
 export class ReportComponent implements OnInit {
   reportConfig = signal<ReportConfig>(getReportConfig());

@@ -29,21 +29,20 @@ import { TeamsGroupsEditorComponent } from '../../component/teams-groups-editor/
 import { TopHeaderComponent } from '../../component/top-header/top-header.component';
 
 @Component({
-  selector: 'app-teams',
-  templateUrl: './teams.component.html',
-  styleUrls: ['./teams.component.css'],
-  standalone: true,
-  imports: [
-    TopHeaderComponent,
-    TeamsGroupsEditorComponent,
-    NgIf,
-    MatButtonModule,
-    KpiComponent,
-    MatTableModule,
-    MatSortModule,
-    MatIconModule,
-    NgFor,
-  ],
+    selector: 'app-teams',
+    templateUrl: './teams.component.html',
+    styleUrls: ['./teams.component.css'],
+    imports: [
+        TopHeaderComponent,
+        TeamsGroupsEditorComponent,
+        NgIf,
+        MatButtonModule,
+        KpiComponent,
+        MatTableModule,
+        MatSortModule,
+        MatIconModule,
+        NgFor,
+    ]
 })
 export class TeamsComponent implements OnInit, AfterViewInit {
   dateStr = dateStr;

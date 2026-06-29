@@ -7,11 +7,10 @@ import { NgIf, NgFor } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
-  selector: 'app-team-selector',
-  templateUrl: './team-selector.component.html',
-  styleUrls: ['./team-selector.component.css'],
-  standalone: true,
-  imports: [MatButtonModule, NgIf, MatMenuModule, MatIconModule, NgFor, MatCheckboxModule],
+    selector: 'app-team-selector',
+    templateUrl: './team-selector.component.html',
+    styleUrls: ['./team-selector.component.css'],
+    imports: [MatButtonModule, NgIf, MatMenuModule, MatIconModule, NgFor, MatCheckboxModule]
 })
 export class TeamSelectorComponent {
   @Input() allTeams: string[] = [];

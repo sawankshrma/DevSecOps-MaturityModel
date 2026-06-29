@@ -48,24 +48,23 @@ import { MatIconModule } from '@angular/material/icon';
 import { ActivityDescriptionComponent } from '../../component/activity-description/activity-description.component';
 
 @Component({
-  selector: 'app-circular-heatmap',
-  templateUrl: './circular-heatmap.component.html',
-  styleUrls: ['./circular-heatmap.component.css'],
-  standalone: true,
-  imports: [
-    NgIf,
-    ActivityDescriptionComponent,
-    MatIconModule,
-    MatButtonModule,
-    MatChipsModule,
-    NgFor,
-    MatDividerModule,
-    MatCardModule,
-    MatExpansionModule,
-    MatTooltipModule,
-    ProgressSliderComponent,
-    KeyValuePipe,
-  ],
+    selector: 'app-circular-heatmap',
+    templateUrl: './circular-heatmap.component.html',
+    styleUrls: ['./circular-heatmap.component.css'],
+    imports: [
+        NgIf,
+        ActivityDescriptionComponent,
+        MatIconModule,
+        MatButtonModule,
+        MatChipsModule,
+        NgFor,
+        MatDividerModule,
+        MatCardModule,
+        MatExpansionModule,
+        MatTooltipModule,
+        ProgressSliderComponent,
+        KeyValuePipe,
+    ]
 })
 export class CircularHeatmapComponent implements OnInit, OnDestroy {
   Routing: string = '/activity-description';

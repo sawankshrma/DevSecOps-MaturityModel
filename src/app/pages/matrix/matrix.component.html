@@ -3,12 +3,9 @@
 
   <div class="chip-filter-section">
     <label class="chip-filter-label">Dimension Filter</label>
-    <mat-chip-listbox #chipList selectable multiple>
-      @for (dim of filtersDim() | keyvalue; track dim) {
-        <mat-chip-option
-          (selectionChange)="toggleDimensionFilters($event)"
-          [value]="dim.key"
-          [selected]="dim.value">
+    <mat-chip-listbox #chipList selectable multiple (change)="toggleDimensionFilters($event)">
+      @for (dim of filtersDim() | keyvalue; track dim.key) {
+        <mat-chip-option [value]="dim.key" [selected]="dim.value">
           {{ dim.key }}
         </mat-chip-option>
       }
@@ -19,12 +16,9 @@
 
   <div class="chip-filter-section">
     <label class="chip-filter-label">Activity Tag Filter</label>
-    <mat-chip-listbox selectable multiple>
-      @for (tag of filtersTag() | keyvalue; track tag) {
-        <mat-chip-option
-          (selectionChange)="toggleTagFilters($event)"
-          [value]="tag.key"
-          [selected]="tag.value">
+    <mat-chip-listbox selectable multiple (change)="toggleTagFilters($event)">
+      @for (tag of filtersTag() | keyvalue; track tag.key) {
+        <mat-chip-option [value]="tag.key" [selected]="tag.value">
           {{ tag.key }}
         </mat-chip-option>
       }

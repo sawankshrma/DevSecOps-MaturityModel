@@ -27,10 +27,10 @@ export class TeamsGroupsChangedEvent {
 }
 
 @Component({
-    selector: 'app-teams-groups-editor',
-    templateUrl: './teams-groups-editor.component.html',
-    styleUrls: ['./teams-groups-editor.component.css'],
-    imports: [SelectableListComponent]
+  selector: 'app-teams-groups-editor',
+  templateUrl: './teams-groups-editor.component.html',
+  styleUrls: ['./teams-groups-editor.component.css'],
+  imports: [SelectableListComponent],
 })
 export class TeamsGroupsEditorComponent implements OnChanges {
   Mode = EditMode;

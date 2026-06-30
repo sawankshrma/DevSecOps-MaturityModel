@@ -3,13 +3,12 @@ import { perfNow } from 'src/app/util/util';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { NgIf, NgFor } from '@angular/common';
 
 @Component({
-    selector: 'app-selectable-list',
-    templateUrl: './selectable-list.component.html',
-    styleUrls: ['./selectable-list.component.css'],
-    imports: [NgIf, MatButtonModule, MatIconModule, NgFor, FormsModule]
+  selector: 'app-selectable-list',
+  templateUrl: './selectable-list.component.html',
+  styleUrls: ['./selectable-list.component.css'],
+  imports: [MatButtonModule, MatIconModule, FormsModule],
 })
 export class SelectableListComponent {
   @Input() title: string = '';

@@ -3,14 +3,14 @@ import { TeamGroups } from '../../model/types';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { NgIf, NgFor } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
-    selector: 'app-team-selector',
-    templateUrl: './team-selector.component.html',
-    styleUrls: ['./team-selector.component.css'],
-    imports: [MatButtonModule, NgIf, MatMenuModule, MatIconModule, NgFor, MatCheckboxModule]
+  selector: 'app-team-selector',
+  templateUrl: './team-selector.component.html',
+  styleUrls: ['./team-selector.component.css'],
+  imports: [MatButtonModule, MatMenuModule, MatIconModule, MatCheckboxModule],
 })
 export class TeamSelectorComponent {
   @Input() allTeams: string[] = [];

@@ -16,7 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
-import { NgIf, NgFor } from '@angular/common';
+
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -32,25 +32,23 @@ export interface ReportConfigModalData {
 }
 
 @Component({
-    selector: 'app-report-config-modal',
-    templateUrl: './report-config-modal.component.html',
-    styleUrls: ['./report-config-modal.component.css'],
-    imports: [
-        MatDialogModule,
-        MatButtonToggleModule,
-        MatDividerModule,
-        MatCheckboxModule,
-        NgIf,
-        MatIconModule,
-        MatTooltipModule,
-        MatSliderModule,
-        NgFor,
-        MatFormFieldModule,
-        MatInputModule,
-        FormsModule,
-        TeamSelectorComponent,
-        MatButtonModule,
-    ]
+  selector: 'app-report-config-modal',
+  templateUrl: './report-config-modal.component.html',
+  styleUrls: ['./report-config-modal.component.css'],
+  imports: [
+    MatDialogModule,
+    MatButtonToggleModule,
+    MatDividerModule,
+    MatCheckboxModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatSliderModule,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule,
+    TeamSelectorComponent,
+    MatButtonModule,
+  ],
 })
 export class ReportConfigModalComponent {
   config = signal<ReportConfig>(JSON.parse(JSON.stringify({})));

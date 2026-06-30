@@ -3,7 +3,7 @@ import { ThemeService } from './service/theme.service';
 import { TitleService } from './service/title.service';
 import { SidenavButtonsComponent } from './component/sidenav-buttons/sidenav-buttons.component';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { NgIf } from '@angular/common';
+
 import { LogoComponent } from './component/logo/logo.component';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,20 +11,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
 @Component({
-    selector: 'app-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.css'],
-    imports: [
-        MatToolbarModule,
-        MatButtonModule,
-        MatIconModule,
-        RouterLink,
-        LogoComponent,
-        NgIf,
-        MatSidenavModule,
-        SidenavButtonsComponent,
-        RouterOutlet,
-    ]
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
+  imports: [
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    RouterLink,
+    LogoComponent,
+    MatSidenavModule,
+    SidenavButtonsComponent,
+    RouterOutlet,
+  ],
 })
 export class AppComponent implements OnInit {
   defaultTitle = '';

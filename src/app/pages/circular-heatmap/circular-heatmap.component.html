@@ -3,19 +3,17 @@
     <div class="col-md-3"></div>
     <div class="col-md-6">
       <div class="overlay-details" [hidden]="!showOverlay">
-        <div *ngIf="showActivityDetails; then activityTrue; else activityFalse"></div>
-        <ng-template #activityTrue>
+        @if (showActivityDetails) {
           <div class="overlay-modal">
             <app-activity-description
               [activity]="showActivityDetails"
-              [iconName]="dataStore?.meta?.getIcon(showActivityDetails?.category || '') || ''"
+              [iconName]="dataStore?.meta?.getIcon(showActivityDetails.category || '') || ''"
               [showCloseButton]="true"
               (activityClicked)="onDependencyClicked($event)"
               (closeRequested)="closeOverlay()">
             </app-activity-description>
           </div>
-        </ng-template>
-        <ng-template #activityFalse>
+        } @else {
           <div class="overlay-modal">
             <div class="overlay-header">
               <button class="overlay-close" (click)="closeOverlay()">
@@ -24,7 +22,7 @@
               <h2>Nothing to show</h2>
             </div>
           </div>
-        </ng-template>
+        }
       </div>
       <div class="heatmapClass">
         <div id="chart" class="heatmapChart"></div>
@@ -36,93 +34,106 @@
           <div class="team-filter" [class.hidden]="!showFilters">
             <label class="filter-label">Team Group Filter</label>
             <mat-chip-listbox selectable>
-              <mat-chip-option
-                *ngFor="let group of filtersTeamGroups | keyvalue: unsorted"
-                [value]="group.key"
-                (selectionChange)="toggleTeamGroupFilter($event)"
-                [selected]="filtersTeamGroups[group.key]">
-                {{ group.key }}
-              </mat-chip-option>
+              @for (group of filtersTeamGroups | keyvalue: unsorted; track group) {
+                <mat-chip-option
+                  [value]="group.key"
+                  (selectionChange)="toggleTeamGroupFilter($event)"
+                  [selected]="filtersTeamGroups[group.key]">
+                  {{ group.key }}
+                </mat-chip-option>
+              }
             </mat-chip-listbox>
             <mat-divider></mat-divider>
             <label class="filter-label">Team Filter</label>
             <mat-chip-listbox selectable multiple>
-              <mat-chip-option
-                *ngFor="let team of filtersTeams | keyvalue"
-                (selectionChange)="toggleTeamFilter($event)"
-                [value]="team.key"
-                [selected]="team.value">
-                {{ team.key }}
-              </mat-chip-option>
+              @for (team of filtersTeams | keyvalue; track team) {
+                <mat-chip-option
+                  (selectionChange)="toggleTeamFilter($event)"
+                  [value]="team.key"
+                  [selected]="team.value">
+                  {{ team.key }}
+                </mat-chip-option>
+              }
             </mat-chip-listbox>
             <mat-divider></mat-divider>
           </div>
         </div>
-        <mat-card appearance="outlined" class="activity-card" *ngIf="showActivityCard">
-          <mat-card-title-group>
-            <mat-card-title>{{ showActivityCard.dimension }}</mat-card-title>
-            <mat-card-subtitle>Level {{ showActivityCard.level }}</mat-card-subtitle>
-          </mat-card-title-group>
-          <mat-card-content
-            *ngFor="let activity of showActivityCard.activities; index as activityIndex">
-            <mat-expansion-panel
-              (opened)="onPanelOpened(activity)"
-              (closed)="onPanelClosed(activity)">
-              <mat-expansion-panel-header>
-                <mat-panel-title>
-                  <span class="title-text">
-                    {{ activity['name'] }}
-                  </span>
-                  <button
-                    mat-icon-button
-                    class="info-button"
-                    matTooltip="Open activity description"
-                    (click)="openActivityDetails(activity['uuid']); $event.stopPropagation()">
-                    <mat-icon class="info-icon">info</mat-icon>
-                  </button>
-                </mat-panel-title>
-              </mat-expansion-panel-header>
-              <ng-template matExpansionPanelContent>
-                <ul class="team-list">
-                  <ng-container *ngFor="let team of filtersTeams | keyvalue">
-                    <li *ngIf="team.value || !hasTeamsFilter">
-                      <label class="team-label"> {{ team.key }}: </label>
-                      <app-progress-slider
-                        [DBG_name]="activity['name']"
-                        [steps]="progressStates"
-                        [state]="getTeamProgressState(activity['uuid'], team.key)"
-                        [originalState]="getBackedupTeamProgressState(activity['uuid'], team.key)"
-                        (progressChange)="
-                          onProgressChange(activity['uuid'], team.key, $event)
-                        "></app-progress-slider>
-                    </li>
-                  </ng-container>
-                </ul>
-                <div class="smaller-italics">
-                  <span>* Has been modified</span><br />
-                  <span>** Has been modified to less complete stage than before</span>
-                </div>
-                <div class="evidence-container">
-                  <button
-                    mat-stroked-button
-                    class="add-evidence-button"
-                    (click)="openViewEvidenceModal(activity['uuid'], activity['name'])">
-                    <mat-icon>visibility</mat-icon>
-                    View Progress Evidences
-                  </button>
-                  <button
-                    mat-stroked-button
-                    color="primary"
-                    class="add-evidence-button"
-                    (click)="openAddEvidenceModal(activity['uuid'])">
-                    <mat-icon>note_add</mat-icon>
-                    Add Evidence
-                  </button>
-                </div>
-              </ng-template>
-            </mat-expansion-panel>
-          </mat-card-content>
-        </mat-card>
+        @if (showActivityCard) {
+          <mat-card appearance="outlined" class="activity-card">
+            <mat-card-title-group>
+              <mat-card-title>{{ showActivityCard.dimension }}</mat-card-title>
+              <mat-card-subtitle>Level {{ showActivityCard.level }}</mat-card-subtitle>
+            </mat-card-title-group>
+            @for (
+              activity of showActivityCard.activities;
+              track activity;
+              let activityIndex = $index
+            ) {
+              <mat-card-content>
+                <mat-expansion-panel
+                  (opened)="onPanelOpened(activity)"
+                  (closed)="onPanelClosed(activity)">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <span class="title-text">
+                        {{ activity['name'] }}
+                      </span>
+                      <button
+                        mat-icon-button
+                        class="info-button"
+                        matTooltip="Open activity description"
+                        (click)="openActivityDetails(activity['uuid']); $event.stopPropagation()">
+                        <mat-icon class="info-icon">info</mat-icon>
+                      </button>
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <ng-template matExpansionPanelContent>
+                    <ul class="team-list">
+                      @for (team of filtersTeams | keyvalue; track team) {
+                        @if (team.value || !hasTeamsFilter) {
+                          <li>
+                            <label class="team-label"> {{ team.key }}: </label>
+                            <app-progress-slider
+                              [DBG_name]="activity['name']"
+                              [steps]="progressStates"
+                              [state]="getTeamProgressState(activity['uuid'], team.key)"
+                              [originalState]="
+                                getBackedupTeamProgressState(activity['uuid'], team.key)
+                              "
+                              (progressChange)="
+                                onProgressChange(activity['uuid'], team.key, $event)
+                              "></app-progress-slider>
+                          </li>
+                        }
+                      }
+                    </ul>
+                    <div class="smaller-italics">
+                      <span>* Has been modified</span><br />
+                      <span>** Has been modified to less complete stage than before</span>
+                    </div>
+                    <div class="evidence-container">
+                      <button
+                        mat-stroked-button
+                        class="add-evidence-button"
+                        (click)="openViewEvidenceModal(activity['uuid'], activity['name'])">
+                        <mat-icon>visibility</mat-icon>
+                        View Progress Evidences
+                      </button>
+                      <button
+                        mat-stroked-button
+                        color="primary"
+                        class="add-evidence-button"
+                        (click)="openAddEvidenceModal(activity['uuid'])">
+                        <mat-icon>note_add</mat-icon>
+                        Add Evidence
+                      </button>
+                    </div>
+                  </ng-template>
+                </mat-expansion-panel>
+              </mat-card-content>
+            }
+          </mat-card>
+        }
         <div class="footer-buttons">
           <button
             class="normal-button"

@@ -8,8 +8,12 @@
       "
       #ngSliderThumb="matSliderThumb" />
   </mat-slider>
-  <span class="step-label">{{ steps[currentValue] }} <!-- eslint-disable-line -->
-    <span *ngIf="currentValue > originalValue"> *</span>
-    <span *ngIf="currentValue < originalValue"> **</span>
+<span class="step-label">{{ steps[currentValue] }} <!-- eslint-disable-line -->
+    @if (currentValue > originalValue) {
+      <span> *</span>
+    }
+    @if (currentValue < originalValue) {
+      <span> **</span>
+    }
   </span>
 </div>

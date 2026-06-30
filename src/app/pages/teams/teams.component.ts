@@ -24,25 +24,23 @@ import { isEmptyObj, perfNow, dateStr, uniqueCount } from 'src/app/util/util';
 import { MatIconModule } from '@angular/material/icon';
 import { KpiComponent } from '../../component/kpi/kpi.component';
 import { MatButtonModule } from '@angular/material/button';
-import { NgIf, NgFor } from '@angular/common';
+
 import { TeamsGroupsEditorComponent } from '../../component/teams-groups-editor/teams-groups-editor.component';
 import { TopHeaderComponent } from '../../component/top-header/top-header.component';
 
 @Component({
-    selector: 'app-teams',
-    templateUrl: './teams.component.html',
-    styleUrls: ['./teams.component.css'],
-    imports: [
-        TopHeaderComponent,
-        TeamsGroupsEditorComponent,
-        NgIf,
-        MatButtonModule,
-        KpiComponent,
-        MatTableModule,
-        MatSortModule,
-        MatIconModule,
-        NgFor,
-    ]
+  selector: 'app-teams',
+  templateUrl: './teams.component.html',
+  styleUrls: ['./teams.component.css'],
+  imports: [
+    TopHeaderComponent,
+    TeamsGroupsEditorComponent,
+    MatButtonModule,
+    KpiComponent,
+    MatTableModule,
+    MatSortModule,
+    MatIconModule,
+  ],
 })
 export class TeamsComponent implements OnInit, AfterViewInit {
   dateStr = dateStr;

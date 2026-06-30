@@ -4,10 +4,10 @@ import { MarkdownViewerComponent } from '../../component/markdown-viewer/markdow
 import { TopHeaderComponent } from '../../component/top-header/top-header.component';
 
 @Component({
-    selector: 'app-roadmap',
-    templateUrl: './roadmap.component.html',
-    styleUrls: ['./roadmap.component.css'],
-    imports: [TopHeaderComponent, MarkdownViewerComponent]
+  selector: 'app-roadmap',
+  templateUrl: './roadmap.component.html',
+  styleUrls: ['./roadmap.component.css'],
+  imports: [TopHeaderComponent, MarkdownViewerComponent],
 })
 export class RoadmapComponent implements OnInit {
   constructor() {}

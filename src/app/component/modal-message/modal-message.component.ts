@@ -11,13 +11,12 @@ import { MarkdownText } from 'src/app/model/markdown-text';
 import { NotificationService } from 'src/app/service/notification.service';
 import { dialogSizeConfig } from 'src/app/util/dialog-sizes';
 import { MatButtonModule } from '@angular/material/button';
-import { NgFor } from '@angular/common';
 
 @Component({
-    selector: 'app-modal-message',
-    templateUrl: './modal-message.component.html',
-    styleUrls: ['./modal-message.component.css'],
-    imports: [MatDialogModule, NgFor, MatButtonModule]
+  selector: 'app-modal-message',
+  templateUrl: './modal-message.component.html',
+  styleUrls: ['./modal-message.component.css'],
+  imports: [MatDialogModule, MatButtonModule],
 })
 export class ModalMessageComponent implements OnInit {
   data: DialogInfo;

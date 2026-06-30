@@ -94,7 +94,7 @@
             [class.filled]="star <= (currentActivity.usefulness || 0)">
             {{ star <= (currentActivity.usefulness || 0) ? 'star' : 'star_border' }}
           </mat-icon>
-          <span class="usefulness-label">{{ this.UsefulnessLabel }}</span>
+          <span class="usefulness-label">{{ UsefulnessLabel }}</span>
         </div>
       </div>
     </div>
@@ -110,7 +110,7 @@
                 class="difficulty-level level-{{
                   currentActivity.difficultyOfImplementation?.knowledge
                 }}"
-                >{{ this.KnowledgeLabel }}</span
+                >{{ KnowledgeLabel }}</span
               >
             </span>
             <span class="difficulty-indicator">
@@ -119,7 +119,7 @@
                 class="difficulty-level level-{{
                   currentActivity.difficultyOfImplementation?.time
                 }}"
-                >{{ this.TimeLabel }}</span
+                >{{ TimeLabel }}</span
               >
             </span>
             <span class="difficulty-indicator">
@@ -128,7 +128,7 @@
                 class="difficulty-level level-{{
                   currentActivity.difficultyOfImplementation?.resources
                 }}"
-                >{{ this.ResourceLabel }}</span
+                >{{ ResourceLabel }}</span
               >
             </span>
           </div>
@@ -142,7 +142,7 @@
             class="difficulty-badge level-{{
               currentActivity.difficultyOfImplementation?.knowledge
             }}"
-            >{{ this.KnowledgeLabel }}</span
+            >{{ KnowledgeLabel }}</span
           >
         </div>
         <div class="difficulty-detail-item">
@@ -150,7 +150,7 @@
           <span class="detail-label">Time:</span>
           <span
             class="difficulty-badge level-{{ currentActivity.difficultyOfImplementation?.time }}"
-            >{{ this.TimeLabel }}</span
+            >{{ TimeLabel }}</span
           >
         </div>
         <div class="difficulty-detail-item">
@@ -160,7 +160,7 @@
             class="difficulty-badge level-{{
               currentActivity.difficultyOfImplementation?.resources
             }}"
-            >{{ this.ResourceLabel }}</span
+            >{{ ResourceLabel }}</span
           >
         </div>
       </div>
@@ -299,7 +299,7 @@
         </mat-panel-title>
       </mat-expansion-panel-header>
       <div class="implementation-tools">
-        <div class="tool-item" *ngFor="let implement of this.currentActivity.implementation">
+        <div class="tool-item" *ngFor="let implement of currentActivity.implementation">
           <div class="tool-title">
             <h4 class="tool-name" [innerHTML]="implement['name']"></h4>
             <a [href]="implement['url']" target="_blank" href="implement['url']">

@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { NgIf, NgFor } from '@angular/common';
+
 import { TeamSelectorComponent } from '../team-selector/team-selector.component';
 
 export interface AddEvidenceModalData {
@@ -21,24 +21,22 @@ export interface AddEvidenceModalData {
 }
 
 @Component({
-    selector: 'app-add-evidence-modal',
-    templateUrl: './add-evidence-modal.component.html',
-    styleUrls: ['./add-evidence-modal.component.css'],
-    imports: [
-        MatDialogModule,
-        TeamSelectorComponent,
-        NgIf,
-        MatFormFieldModule,
-        MatDividerModule,
-        MatInputModule,
-        FormsModule,
-        NgFor,
-        MatSelectModule,
-        MatOptionModule,
-        MatButtonModule,
-        MatTooltipModule,
-        MatIconModule,
-    ]
+  selector: 'app-add-evidence-modal',
+  templateUrl: './add-evidence-modal.component.html',
+  styleUrls: ['./add-evidence-modal.component.css'],
+  imports: [
+    MatDialogModule,
+    TeamSelectorComponent,
+    MatFormFieldModule,
+    MatDividerModule,
+    MatInputModule,
+    FormsModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatIconModule,
+  ],
 })
 export class AddEvidenceModalComponent {
   activityUuid: string;

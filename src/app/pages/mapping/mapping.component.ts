@@ -17,7 +17,7 @@ import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
-import { NgFor, NgIf, SlicePipe } from '@angular/common';
+import { SlicePipe } from '@angular/common';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { TopHeaderComponent } from '../../component/top-header/top-header.component';
@@ -54,25 +54,23 @@ enum SortMode {
 }
 
 @Component({
-    selector: 'app-mapping',
-    templateUrl: './mapping.component.html',
-    styleUrls: ['./mapping.component.css'],
-    imports: [
-        TopHeaderComponent,
-        MatFormFieldModule,
-        MatChipsModule,
-        NgFor,
-        MatIconModule,
-        MatInputModule,
-        FormsModule,
-        ReactiveFormsModule,
-        NgIf,
-        MatButtonModule,
-        MatTableModule,
-        MatSortModule,
-        RouterLink,
-        SlicePipe,
-    ]
+  selector: 'app-mapping',
+  templateUrl: './mapping.component.html',
+  styleUrls: ['./mapping.component.css'],
+  imports: [
+    TopHeaderComponent,
+    MatFormFieldModule,
+    MatChipsModule,
+    MatIconModule,
+    MatInputModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatTableModule,
+    MatSortModule,
+    RouterLink,
+    SlicePipe,
+  ],
 })
 export class MappingComponent implements OnInit, AfterViewInit {
   allMappings: MappingRow[] = [];

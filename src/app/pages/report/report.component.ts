@@ -18,7 +18,7 @@ import {
 } from '../../component/report-config-modal/report-config-modal.component';
 import { ProgressTitle, TeamGroups } from '../../model/types';
 import { EvidenceEntry } from '../../model/evidence-store';
-import { DatePipe, NgIf, NgFor } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import {
   ViewEvidenceModalComponent,
   ViewEvidenceModalData,
@@ -50,21 +50,19 @@ export interface LevelOverview {
 }
 
 @Component({
-    selector: 'app-report',
-    templateUrl: './report.component.html',
-    styleUrls: ['./report.component.css'],
-    providers: [DatePipe],
-    imports: [
-        TopHeaderComponent,
-        MatButtonModule,
-        MatIconModule,
-        NgIf,
-        TeamSelectorComponent,
-        MatProgressSpinnerModule,
-        NgFor,
-        ColResizeDirective,
-        MatTooltipModule,
-    ]
+  selector: 'app-report',
+  templateUrl: './report.component.html',
+  styleUrls: ['./report.component.css'],
+  providers: [DatePipe],
+  imports: [
+    TopHeaderComponent,
+    MatButtonModule,
+    MatIconModule,
+    TeamSelectorComponent,
+    MatProgressSpinnerModule,
+    ColResizeDirective,
+    MatTooltipModule,
+  ],
 })
 export class ReportComponent implements OnInit {
   reportConfig = signal<ReportConfig>(getReportConfig());

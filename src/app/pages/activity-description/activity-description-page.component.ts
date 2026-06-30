@@ -9,13 +9,12 @@ import {
 } from '../../component/modal-message/modal-message.component';
 import { ActivityDescriptionComponent } from '../../component/activity-description/activity-description.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-activity-description-page',
-    templateUrl: './activity-description-page.component.html',
-    styleUrls: ['./activity-description-page.component.css'],
-    imports: [NgIf, MatProgressSpinnerModule, ActivityDescriptionComponent]
+  selector: 'app-activity-description-page',
+  templateUrl: './activity-description-page.component.html',
+  styleUrls: ['./activity-description-page.component.css'],
+  imports: [MatProgressSpinnerModule, ActivityDescriptionComponent],
 })
 export class ActivityDescriptionPageComponent implements OnInit {
   currentActivity: Activity | null = null;

@@ -3,7 +3,7 @@ import { equalArray } from 'src/app/util/util';
 import { LoaderService } from 'src/app/service/loader/data-loader.service';
 import * as d3 from 'd3';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Location, NgIf, NgFor, KeyValuePipe } from '@angular/common';
+import { Location, KeyValuePipe } from '@angular/common';
 import { MatChipOption, MatChipSelectionChange, MatChipsModule } from '@angular/material/chips';
 import { Subject } from 'rxjs';
 import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
@@ -48,23 +48,21 @@ import { MatIconModule } from '@angular/material/icon';
 import { ActivityDescriptionComponent } from '../../component/activity-description/activity-description.component';
 
 @Component({
-    selector: 'app-circular-heatmap',
-    templateUrl: './circular-heatmap.component.html',
-    styleUrls: ['./circular-heatmap.component.css'],
-    imports: [
-        NgIf,
-        ActivityDescriptionComponent,
-        MatIconModule,
-        MatButtonModule,
-        MatChipsModule,
-        NgFor,
-        MatDividerModule,
-        MatCardModule,
-        MatExpansionModule,
-        MatTooltipModule,
-        ProgressSliderComponent,
-        KeyValuePipe,
-    ]
+  selector: 'app-circular-heatmap',
+  templateUrl: './circular-heatmap.component.html',
+  styleUrls: ['./circular-heatmap.component.css'],
+  imports: [
+    ActivityDescriptionComponent,
+    MatIconModule,
+    MatButtonModule,
+    MatChipsModule,
+    MatDividerModule,
+    MatCardModule,
+    MatExpansionModule,
+    MatTooltipModule,
+    ProgressSliderComponent,
+    KeyValuePipe,
+  ],
 })
 export class CircularHeatmapComponent implements OnInit, OnDestroy {
   Routing: string = '/activity-description';

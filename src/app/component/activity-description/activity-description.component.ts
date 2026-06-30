@@ -18,21 +18,18 @@ import { EvidencePanelComponent } from '../evidence-panel/evidence-panel.compone
 import { DependencyGraphComponent } from '../dependency-graph/dependency-graph.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { NgIf, NgFor } from '@angular/common';
 
 @Component({
-    selector: 'app-activity-description',
-    templateUrl: './activity-description.component.html',
-    styleUrls: ['./activity-description.component.css'],
-    imports: [
-        NgIf,
-        MatIconModule,
-        MatButtonModule,
-        MatExpansionModule,
-        DependencyGraphComponent,
-        NgFor,
-        EvidencePanelComponent,
-    ]
+  selector: 'app-activity-description',
+  templateUrl: './activity-description.component.html',
+  styleUrls: ['./activity-description.component.css'],
+  imports: [
+    MatIconModule,
+    MatButtonModule,
+    MatExpansionModule,
+    DependencyGraphComponent,
+    EvidencePanelComponent,
+  ],
 })
 export class ActivityDescriptionComponent implements OnInit, OnChanges {
   @Input() activity: Activity | null = null;

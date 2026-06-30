@@ -27,7 +27,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatOptionModule } from '@angular/material/core';
-import { NgFor, NgIf } from '@angular/common';
+
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
@@ -56,26 +56,24 @@ interface ProgressDefinitionForm {
 }
 
 @Component({
-    selector: 'app-settings',
-    templateUrl: './settings.component.html',
-    styleUrls: ['./settings.component.css'],
-    imports: [
-        TopHeaderComponent,
-        MatCardModule,
-        MatFormFieldModule,
-        MatSelectModule,
-        FormsModule,
-        NgFor,
-        MatOptionModule,
-        MatSliderModule,
-        NgIf,
-        MatButtonModule,
-        MatIconModule,
-        ReactiveFormsModule,
-        MatInputModule,
-        TextFieldModule,
-        MatProgressSpinnerModule,
-    ]
+  selector: 'app-settings',
+  templateUrl: './settings.component.html',
+  styleUrls: ['./settings.component.css'],
+  imports: [
+    TopHeaderComponent,
+    MatCardModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    FormsModule,
+    MatOptionModule,
+    MatSliderModule,
+    MatButtonModule,
+    MatIconModule,
+    ReactiveFormsModule,
+    MatInputModule,
+    TextFieldModule,
+    MatProgressSpinnerModule,
+  ],
 })
 export class SettingsComponent implements OnInit {
   meta!: MetaStore;

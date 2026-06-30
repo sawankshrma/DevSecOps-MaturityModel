@@ -10,12 +10,14 @@
       <mat-icon>print</mat-icon>
       Print
     </button>
-    <span class="activity-count" *ngIf="!isLoading">
-      {{ totalFilteredActivities() }} activities
-      <span *ngIf="reportConfig().selectedTeams.length > 0">
-        · {{ reportConfig().selectedTeams.length }} teams
+    @if (!isLoading) {
+      <span class="activity-count">
+        {{ totalFilteredActivities() }} activities
+        @if (reportConfig().selectedTeams.length > 0) {
+          <span> · {{ reportConfig().selectedTeams.length }} teams </span>
+        }
       </span>
-    </span>
+    }
   </div>
 
   <div class="team-selector-section no-print">
@@ -27,245 +29,245 @@
     </app-team-selector>
   </div>
 
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
-  </div>
+  @if (isLoading) {
+    <div class="loading-container">
+      <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    </div>
+  }
 
-  <div *ngIf="!isLoading && filteredDimensions().length === 0" class="empty-state">
-    <mat-icon>filter_list_off</mat-icon>
-    <p>No activities match the current report configuration.</p>
-    <button mat-stroked-button (click)="openConfigModal()">Adjust Configuration</button>
-  </div>
+  @if (!isLoading && filteredDimensions().length === 0) {
+    <div class="empty-state">
+      <mat-icon>filter_list_off</mat-icon>
+      <p>No activities match the current report configuration.</p>
+      <button mat-stroked-button (click)="openConfigModal()">Adjust Configuration</button>
+    </div>
+  }
 
-  <div *ngIf="!isLoading && filteredDimensions().length > 0" class="report-body">
-    <!-- Overview Section -->
-    <section class="overview-section">
-      <h2 class="section-title">Overview</h2>
-      <table class="report-table overview-table">
-        <thead>
-          <tr>
-            <th>Level</th>
-            <th>Total Activities</th>
-            <th>Completed</th>
-            <th>Completion</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of levelByLevelOverviewFromActivties()">
-            <td class="cell-level">{{ row.level }}</td>
-            <td class="cell-center">{{ row.totalActivities }}</td>
-            <td class="cell-center">{{ row.completedCount }}</td>
-            <td class="cell-center">
-              <span class="completion-bar">
-                <span class="completion-fill" [style.width.%]="row.completionPercent"></span>
-              </span>
-              {{ row.completionPercent }}%
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section *ngFor="let dimension of filteredDimensions()" class="dimension-section">
-      <h2 class="section-title">{{ dimension.name }}</h2>
-
-      <div *ngFor="let subDimension of dimension.subDimensions" class="subdimension-group">
-        <h3 class="subdimension-title">{{ subDimension.name }}</h3>
-        <table class="report-table resizable-table">
+  @if (!isLoading && filteredDimensions().length > 0) {
+    <div class="report-body">
+      <!-- Overview Section -->
+      <section class="overview-section">
+        <h2 class="section-title">Overview</h2>
+        <table class="report-table overview-table">
           <thead>
             <tr>
-              <th appColResize class="col-level">Level</th>
-              <th appColResize class="col-activity">Activity</th>
-              <th appColResize *ngIf="reportConfig().activityAttributes.showUuid" class="col-small">
-                UUID
-              </th>
-              <th
-                appColResize
-                *ngIf="reportConfig().activityAttributes.showDescription"
-                class="col-description">
-                Description
-              </th>
-
-              <!-- Column Grouping by Progress -->
-              <ng-container *ngIf="reportConfig().columnGrouping === 'byProgress'">
-                <th appColResize class="col-progress" *ngFor="let title of allProgressTitles">
-                  {{ title }}
-                </th>
-              </ng-container>
-
-              <!-- Column Grouping by Team -->
-              <ng-container *ngIf="reportConfig().columnGrouping === 'byTeam'">
-                <th appColResize class="col-team" *ngFor="let team of reportConfig().selectedTeams">
-                  {{ team }}
-                </th>
-              </ng-container>
-
-              <th
-                appColResize
-                *ngIf="reportConfig().activityAttributes.showRisk"
-                class="col-description">
-                Risk
-              </th>
-              <th
-                appColResize
-                *ngIf="reportConfig().activityAttributes.showMeasure"
-                class="col-description">
-                Measure
-              </th>
-              <th
-                appColResize
-                *ngIf="reportConfig().activityAttributes.showDifficultyOfImplementation"
-                class="col-tags">
-                Difficulty
-              </th>
-              <th
-                appColResize
-                *ngIf="reportConfig().activityAttributes.showUsefulness"
-                class="col-small">
-                Usefulness
-              </th>
-
-              <!-- Implementation -->
-              <th
-                appColResize
-                *ngIf="reportConfig().activityAttributes.showImplementation"
-                class="col-ref">
-                Implementation
-              </th>
-
-              <!-- Depends On -->
-              <th
-                appColResize
-                *ngIf="reportConfig().activityAttributes.showDependsOn"
-                class="col-ref">
-                Depends On
-              </th>
-
-              <!-- Single merged References column -->
-              <th
-                appColResize
-                *ngIf="reportConfig().activityAttributes.showReferences"
-                class="col-ref">
-                References
-              </th>
-
-              <!-- Evidence -->
-              <th
-                appColResize
-                *ngIf="reportConfig().activityAttributes.showEvidence"
-                class="col-evidence">
-                Evidence
-              </th>
-
-              <!-- Tags -->
-              <th appColResize *ngIf="reportConfig().activityAttributes.showTags" class="col-tags">
-                Tags
-              </th>
+              <th>Level</th>
+              <th>Total Activities</th>
+              <th>Completed</th>
+              <th>Completion</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let activity of subDimension.activities">
-              <td class="cell-level">{{ activity.level }}</td>
-              <td class="cell-activity">{{ activity.name }}</td>
-
-              <!-- UUID -->
-              <td *ngIf="reportConfig().activityAttributes.showUuid" class="cell-tags">
-                {{ activity.uuid }}
-              </td>
-
-              <!-- Description -->
-              <td
-                *ngIf="reportConfig().activityAttributes.showDescription"
-                class="cell-description">
-                <div
-                  class="description-content"
-                  [innerHTML]="
-                    renderCappedDescription(activity.description, reportConfig().descriptionWordCap)
-                  "></div>
-              </td>
-
-              <!-- Progress cells -->
-              <ng-container *ngIf="reportConfig().columnGrouping === 'byProgress'">
-                <td class="cell-progress" *ngFor="let title of allProgressTitles">
-                  {{ getTeamsForProgress(activity, title) }}
+            @for (row of levelByLevelOverviewFromActivties(); track row) {
+              <tr>
+                <td class="cell-level">{{ row.level }}</td>
+                <td class="cell-center">{{ row.totalActivities }}</td>
+                <td class="cell-center">{{ row.completedCount }}</td>
+                <td class="cell-center">
+                  <span class="completion-bar">
+                    <span class="completion-fill" [style.width.%]="row.completionPercent"></span>
+                  </span>
+                  {{ row.completionPercent }}%
                 </td>
-              </ng-container>
-
-              <!-- Team cells -->
-              <ng-container *ngIf="reportConfig().columnGrouping === 'byTeam'">
-                <td class="cell-team" *ngFor="let team of reportConfig().selectedTeams">
-                  {{ getTeamProgressName(activity, team) }}
-                </td>
-              </ng-container>
-
-              <!-- Risk -->
-              <td *ngIf="reportConfig().activityAttributes.showRisk" class="cell-description">
-                <div
-                  class="description-content"
-                  [innerHTML]="
-                    renderCappedDescription(activity.risk, reportConfig().descriptionWordCap)
-                  "></div>
-              </td>
-
-              <!-- Measure -->
-              <td *ngIf="reportConfig().activityAttributes.showMeasure" class="cell-description">
-                <div
-                  class="description-content"
-                  [innerHTML]="
-                    renderCappedDescription(activity.measure, reportConfig().descriptionWordCap)
-                  "></div>
-              </td>
-
-              <!-- Difficulty of Implementation -->
-              <td
-                *ngIf="reportConfig().activityAttributes.showDifficultyOfImplementation"
-                class="cell-tags">
-                {{ formatDifficulty(activity.difficultyOfImplementation) }}
-              </td>
-
-              <!-- Usefulness -->
-              <td *ngIf="reportConfig().activityAttributes.showUsefulness" class="cell-center">
-                {{ activity.usefulness || '—' }}
-              </td>
-
-              <!-- Implementation -->
-              <td *ngIf="reportConfig().activityAttributes.showImplementation" class="cell-ref">
-                <div [innerHTML]="formatImplementation(activity.implementation)"></div>
-              </td>
-
-              <!-- Depends On -->
-              <td *ngIf="reportConfig().activityAttributes.showDependsOn" class="cell-ref">
-                <div [innerHTML]="formatDependsOn(activity.dependsOn)"></div>
-              </td>
-
-              <!-- Single merged References cell -->
-              <td *ngIf="reportConfig().activityAttributes.showReferences" class="cell-ref">
-                <div [innerHTML]="formatReferences(activity.references)"></div>
-              </td>
-
-              <!-- Evidence -->
-              <td *ngIf="reportConfig().activityAttributes.showEvidence" class="cell-description">
-                <div class="description-content evidence-cell">
-                  <button
-                    *ngIf="formatEvidence(activity) !== '—'"
-                    mat-icon-button
-                    class="evidence-view-btn no-print"
-                    matTooltip="View evidence details"
-                    (click)="openViewEvidenceModal(activity.uuid, activity.name)">
-                    <mat-icon>visibility</mat-icon>
-                  </button>
-                </div>
-                <div [innerHTML]="formatEvidence(activity)"></div>
-              </td>
-
-              <!-- Tags -->
-              <td *ngIf="reportConfig().activityAttributes.showTags" class="cell-tags">
-                {{ formatTags(activity.tags) }}
-              </td>
-            </tr>
+              </tr>
+            }
           </tbody>
         </table>
-      </div>
-    </section>
-  </div>
+      </section>
+      @for (dimension of filteredDimensions(); track dimension) {
+        <section class="dimension-section">
+          <h2 class="section-title">{{ dimension.name }}</h2>
+          @for (subDimension of dimension.subDimensions; track subDimension) {
+            <div class="subdimension-group">
+              <h3 class="subdimension-title">{{ subDimension.name }}</h3>
+              <table class="report-table resizable-table">
+                <thead>
+                  <tr>
+                    <th appColResize class="col-level">Level</th>
+                    <th appColResize class="col-activity">Activity</th>
+                    @if (reportConfig().activityAttributes.showUuid) {
+                      <th appColResize class="col-small">UUID</th>
+                    }
+                    @if (reportConfig().activityAttributes.showDescription) {
+                      <th appColResize class="col-description">Description</th>
+                    }
+                    <!-- Column Grouping by Progress -->
+                    @if (reportConfig().columnGrouping === 'byProgress') {
+                      @for (title of allProgressTitles; track title) {
+                        <th appColResize class="col-progress">
+                          {{ title }}
+                        </th>
+                      }
+                    }
+                    <!-- Column Grouping by Team -->
+                    @if (reportConfig().columnGrouping === 'byTeam') {
+                      @for (team of reportConfig().selectedTeams; track team) {
+                        <th appColResize class="col-team">
+                          {{ team }}
+                        </th>
+                      }
+                    }
+                    @if (reportConfig().activityAttributes.showRisk) {
+                      <th appColResize class="col-description">Risk</th>
+                    }
+                    @if (reportConfig().activityAttributes.showMeasure) {
+                      <th appColResize class="col-description">Measure</th>
+                    }
+                    @if (reportConfig().activityAttributes.showDifficultyOfImplementation) {
+                      <th appColResize class="col-tags">Difficulty</th>
+                    }
+                    @if (reportConfig().activityAttributes.showUsefulness) {
+                      <th appColResize class="col-small">Usefulness</th>
+                    }
+                    <!-- Implementation -->
+                    @if (reportConfig().activityAttributes.showImplementation) {
+                      <th appColResize class="col-ref">Implementation</th>
+                    }
+                    <!-- Depends On -->
+                    @if (reportConfig().activityAttributes.showDependsOn) {
+                      <th appColResize class="col-ref">Depends On</th>
+                    }
+                    <!-- Single merged References column -->
+                    @if (reportConfig().activityAttributes.showReferences) {
+                      <th appColResize class="col-ref">References</th>
+                    }
+                    <!-- Evidence -->
+                    @if (reportConfig().activityAttributes.showEvidence) {
+                      <th appColResize class="col-evidence">Evidence</th>
+                    }
+                    <!-- Tags -->
+                    @if (reportConfig().activityAttributes.showTags) {
+                      <th appColResize class="col-tags">Tags</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (activity of subDimension.activities; track activity) {
+                    <tr>
+                      <td class="cell-level">{{ activity.level }}</td>
+                      <td class="cell-activity">{{ activity.name }}</td>
+                      <!-- UUID -->
+                      @if (reportConfig().activityAttributes.showUuid) {
+                        <td class="cell-tags">
+                          {{ activity.uuid }}
+                        </td>
+                      }
+                      <!-- Description -->
+                      @if (reportConfig().activityAttributes.showDescription) {
+                        <td class="cell-description">
+                          <div
+                            class="description-content"
+                            [innerHTML]="
+                              renderCappedDescription(
+                                activity.description,
+                                reportConfig().descriptionWordCap
+                              )
+                            "></div>
+                        </td>
+                      }
+                      <!-- Progress cells -->
+                      @if (reportConfig().columnGrouping === 'byProgress') {
+                        @for (title of allProgressTitles; track title) {
+                          <td class="cell-progress">
+                            {{ getTeamsForProgress(activity, title) }}
+                          </td>
+                        }
+                      }
+                      <!-- Team cells -->
+                      @if (reportConfig().columnGrouping === 'byTeam') {
+                        @for (team of reportConfig().selectedTeams; track team) {
+                          <td class="cell-team">
+                            {{ getTeamProgressName(activity, team) }}
+                          </td>
+                        }
+                      }
+                      <!-- Risk -->
+                      @if (reportConfig().activityAttributes.showRisk) {
+                        <td class="cell-description">
+                          <div
+                            class="description-content"
+                            [innerHTML]="
+                              renderCappedDescription(
+                                activity.risk,
+                                reportConfig().descriptionWordCap
+                              )
+                            "></div>
+                        </td>
+                      }
+                      <!-- Measure -->
+                      @if (reportConfig().activityAttributes.showMeasure) {
+                        <td class="cell-description">
+                          <div
+                            class="description-content"
+                            [innerHTML]="
+                              renderCappedDescription(
+                                activity.measure,
+                                reportConfig().descriptionWordCap
+                              )
+                            "></div>
+                        </td>
+                      }
+                      <!-- Difficulty of Implementation -->
+                      @if (reportConfig().activityAttributes.showDifficultyOfImplementation) {
+                        <td class="cell-tags">
+                          {{ formatDifficulty(activity.difficultyOfImplementation) }}
+                        </td>
+                      }
+                      <!-- Usefulness -->
+                      @if (reportConfig().activityAttributes.showUsefulness) {
+                        <td class="cell-center">
+                          {{ activity.usefulness || '—' }}
+                        </td>
+                      }
+                      <!-- Implementation -->
+                      @if (reportConfig().activityAttributes.showImplementation) {
+                        <td class="cell-ref">
+                          <div [innerHTML]="formatImplementation(activity.implementation)"></div>
+                        </td>
+                      }
+                      <!-- Depends On -->
+                      @if (reportConfig().activityAttributes.showDependsOn) {
+                        <td class="cell-ref">
+                          <div [innerHTML]="formatDependsOn(activity.dependsOn)"></div>
+                        </td>
+                      }
+                      <!-- Single merged References cell -->
+                      @if (reportConfig().activityAttributes.showReferences) {
+                        <td class="cell-ref">
+                          <div [innerHTML]="formatReferences(activity.references)"></div>
+                        </td>
+                      }
+                      <!-- Evidence -->
+                      @if (reportConfig().activityAttributes.showEvidence) {
+                        <td class="cell-description">
+                          <div class="description-content evidence-cell">
+                            @if (formatEvidence(activity) !== '—') {
+                              <button
+                                mat-icon-button
+                                class="evidence-view-btn no-print"
+                                matTooltip="View evidence details"
+                                (click)="openViewEvidenceModal(activity.uuid, activity.name)">
+                                <mat-icon>visibility</mat-icon>
+                              </button>
+                            }
+                          </div>
+                          <div [innerHTML]="formatEvidence(activity)"></div>
+                        </td>
+                      }
+                      <!-- Tags -->
+                      @if (reportConfig().activityAttributes.showTags) {
+                        <td class="cell-tags">
+                          {{ formatTags(activity.tags) }}
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+      }
+    </div>
+  }
 </div>

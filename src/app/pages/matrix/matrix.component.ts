@@ -12,7 +12,7 @@ import { SettingsService } from 'src/app/service/settings/settings.service';
 import { NotificationService } from 'src/app/service/notification.service';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { NgFor, NgIf, KeyValuePipe } from '@angular/common';
+import { KeyValuePipe } from '@angular/common';
 import { TopHeaderComponent } from '../../component/top-header/top-header.component';
 
 export interface MatrixRow {
@@ -30,19 +30,17 @@ type LevelKey = keyof Pick<MatrixRow, 'level1' | 'level2' | 'level3' | 'level4' 
 
 @UntilDestroy()
 @Component({
-    selector: 'app-matrix',
-    templateUrl: './matrix.component.html',
-    styleUrls: ['./matrix.component.css'],
-    imports: [
-        TopHeaderComponent,
-        MatChipsModule,
-        NgFor,
-        MatDividerModule,
-        MatTableModule,
-        MatIconModule,
-        NgIf,
-        KeyValuePipe,
-    ]
+  selector: 'app-matrix',
+  templateUrl: './matrix.component.html',
+  styleUrls: ['./matrix.component.css'],
+  imports: [
+    TopHeaderComponent,
+    MatChipsModule,
+    MatDividerModule,
+    MatTableModule,
+    MatIconModule,
+    KeyValuePipe,
+  ],
 })
 export class MatrixComponent implements OnInit {
   Routing: string = '/activity-description';

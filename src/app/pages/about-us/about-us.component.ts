@@ -3,10 +3,10 @@ import { MarkdownViewerComponent } from '../../component/markdown-viewer/markdow
 import { TopHeaderComponent } from '../../component/top-header/top-header.component';
 
 @Component({
-    selector: 'app-about-us',
-    templateUrl: './about-us.component.html',
-    styleUrls: ['./about-us.component.css'],
-    imports: [TopHeaderComponent, MarkdownViewerComponent]
+  selector: 'app-about-us',
+  templateUrl: './about-us.component.html',
+  styleUrls: ['./about-us.component.css'],
+  imports: [TopHeaderComponent, MarkdownViewerComponent],
 })
 export class AboutUsComponent {
   constructor() {}

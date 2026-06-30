@@ -5,14 +5,14 @@ import { GITHUB_SVG } from '../../../assets/svg_icons';
 import { ThemeService } from '../../service/theme.service';
 import { MatDividerModule } from '@angular/material/divider';
 import { RouterLink } from '@angular/router';
-import { NgFor } from '@angular/common';
+
 import { MatListModule } from '@angular/material/list';
 
 @Component({
-    selector: 'app-sidenav-buttons',
-    templateUrl: './sidenav-buttons.component.html',
-    styleUrls: ['./sidenav-buttons.component.css'],
-    imports: [MatListModule, NgFor, RouterLink, MatIconModule, MatDividerModule]
+  selector: 'app-sidenav-buttons',
+  templateUrl: './sidenav-buttons.component.html',
+  styleUrls: ['./sidenav-buttons.component.css'],
+  imports: [MatListModule, RouterLink, MatIconModule, MatDividerModule],
 })
 export class SidenavButtonsComponent {
   Options: string[] = [

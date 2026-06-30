@@ -33,24 +33,18 @@
           </button>
           <div class="team-filter" [class.hidden]="!showFilters">
             <label class="filter-label">Team Group Filter</label>
-            <mat-chip-listbox selectable>
-              @for (group of filtersTeamGroups | keyvalue: unsorted; track group) {
-                <mat-chip-option
-                  [value]="group.key"
-                  (selectionChange)="toggleTeamGroupFilter($event)"
-                  [selected]="filtersTeamGroups[group.key]">
+            <mat-chip-listbox selectable (change)="toggleTeamGroupFilter($event)">
+              @for (group of filtersTeamGroups | keyvalue: unsorted; track group.key) {
+                <mat-chip-option [value]="group.key" [selected]="filtersTeamGroups[group.key]">
                   {{ group.key }}
                 </mat-chip-option>
               }
             </mat-chip-listbox>
             <mat-divider></mat-divider>
             <label class="filter-label">Team Filter</label>
-            <mat-chip-listbox selectable multiple>
-              @for (team of filtersTeams | keyvalue; track team) {
-                <mat-chip-option
-                  (selectionChange)="toggleTeamFilter($event)"
-                  [value]="team.key"
-                  [selected]="team.value">
+            <mat-chip-listbox selectable multiple (change)="toggleTeamFilter($event)">
+              @for (team of filtersTeams | keyvalue; track team.key) {
+                <mat-chip-option [value]="team.key" [selected]="team.value">
                   {{ team.key }}
                 </mat-chip-option>
               }

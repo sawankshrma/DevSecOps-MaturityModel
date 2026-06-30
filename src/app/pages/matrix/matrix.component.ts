@@ -5,7 +5,7 @@ import { Router, NavigationExtras } from '@angular/router';
 import { LoaderService } from 'src/app/service/loader/data-loader.service';
 import { Activity, ActivityStore, Data } from 'src/app/model/activity-store';
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { MatChipListbox, MatChipSelectionChange, MatChipsModule } from '@angular/material/chips';
+import { MatChipListbox, MatChipListboxChange, MatChipsModule } from '@angular/material/chips';
 import { DataStore } from 'src/app/model/data-store';
 import { perfNow } from 'src/app/util/util';
 import { SettingsService } from 'src/app/service/settings/settings.service';
@@ -193,28 +193,24 @@ export class MatrixComponent implements OnInit {
   chipsControl = new FormControl(['chipsControl']);
   chipList!: MatChipListbox;
 
-  toggleTagFilters(event: MatChipSelectionChange) {
-    if (!event?.source || event.source.value == null) return;
-
-    const value = event.source.value;
-    const selected = event.selected;
-
-    setTimeout(() => {
-      this.filtersTag.update(f => ({ ...f, [value]: selected }));
-      console.log(`${perfNow()}: Matrix: Chip flip Tag '${value}: ${selected}`);
+  toggleTagFilters(event: MatChipListboxChange) {
+    const selectedValues: string[] = event.value || [];
+    console.log(`${perfNow()}: Matrix: Tag filter changed: [${selectedValues.join(', ')}]`);
+    const newFilter: Record<string, boolean> = {};
+    Object.keys(this.filtersTag()).forEach(key => {
+      newFilter[key] = selectedValues.includes(key);
     });
+    this.filtersTag.set(newFilter);
   }
 
-  toggleDimensionFilters(event: MatChipSelectionChange) {
-    if (!event?.source || event.source.value == null) return;
-
-    const value = event.source.value;
-    const selected = event.selected;
-
-    setTimeout(() => {
-      this.filtersDim.update(f => ({ ...f, [value]: selected }));
-      console.log(`${perfNow()}: Matrix: Chip flip Dim '${value}: ${selected}`);
+  toggleDimensionFilters(event: MatChipListboxChange) {
+    const selectedValues: string[] = event.value || [];
+    console.log(`${perfNow()}: Matrix: Dim filter changed: [${selectedValues.join(', ')}]`);
+    const newFilter: Record<string, boolean> = {};
+    Object.keys(this.filtersDim()).forEach(key => {
+      newFilter[key] = selectedValues.includes(key);
     });
+    this.filtersDim.set(newFilter);
   }
 
   @ViewChild('rowInput') rowInput!: ElementRef<HTMLInputElement>;

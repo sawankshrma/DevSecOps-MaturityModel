@@ -476,6 +476,28 @@ Upgraded Angular Core, CLI, Material, and CDK to v18. TypeScript version pinning
 
   
 
+<details>
+<summary><strong>Angular 18 → 20</strong></summary>
+
+### Summary
+
+Two clean version bumps (19, then 20) across Core, CLI, Material, and CDK, interspersed with a Control Flow migration, a chip filter loop fix, an RxJS upgrade for bundler module resolution, and a dialog theming fix.
+
+- Upgraded Core & CLI to v19, then Material & CDK to v19.
+- Migrated templates to the new Control Flow syntax (`ng generate @angular/core:control-flow`).
+- Removed unnecessary `this.` prefix when accessing template reference variables.
+- Fixed an infinite filter loop by switching chip listboxes from `(selectionChange)` to `(change)`.
+- Bumped `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` to `8.62.1`.
+- Upgraded Core & CLI to v20, then Material & CDK to v20.
+- Upgraded `rxjs` to `7.8.1` and switched to `moduleResolution: bundler` (rxjs 7.5.0 lacked an `exports` field required for bundler resolution).
+- Fixed dialog surface background override (Material now paints background via `--mat-dialog-container-color` on `.mat-mdc-dialog-surface`, not `.mat-mdc-dialog-container`).
+- Migrated constructor DI to the `inject()` function across the codebase (`ng generate @angular/core:inject`), resolving all `@angular-eslint/prefer-inject` lint errors.
+- Updated CI workflow to run on Node.js 20 instead of 18.
+
+---
+
+</details>
+
 ---
 
 ## Signal Migration

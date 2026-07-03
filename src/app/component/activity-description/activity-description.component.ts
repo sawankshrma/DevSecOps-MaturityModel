@@ -9,6 +9,7 @@ import {
   EventEmitter,
   OnInit,
   HostListener,
+  inject,
 } from '@angular/core';
 import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { Activity } from '../../model/activity-store';
@@ -32,6 +33,8 @@ import { MatIconModule } from '@angular/material/icon';
   ],
 })
 export class ActivityDescriptionComponent implements OnInit, OnChanges {
+  private loader = inject(LoaderService);
+
   @Input() activity: Activity | null = null;
   @Input() iconName: string = '';
   @Input() showCloseButton: boolean = false;
@@ -53,8 +56,6 @@ export class ActivityDescriptionComponent implements OnInit, OnChanges {
   progressTitlesWithTeams: ProgressTitle[] = [];
 
   @ViewChildren(MatAccordion) accordion!: QueryList<MatAccordion>;
-
-  constructor(private loader: LoaderService) {}
 
   ngOnInit() {
     // Set activity data if provided

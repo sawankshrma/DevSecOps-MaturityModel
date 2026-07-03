@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoaderService } from '../../service/loader/data-loader.service';
 import { Activity, ActivityStore } from '../../model/activity-store';
@@ -17,15 +17,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   imports: [MatProgressSpinnerModule, ActivityDescriptionComponent],
 })
 export class ActivityDescriptionPageComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private loader = inject(LoaderService);
+  private router = inject(Router);
+  modal = inject(ModalMessageComponent);
+
   currentActivity: Activity | null = null;
   isLoading: boolean = true;
-
-  constructor(
-    private route: ActivatedRoute,
-    private loader: LoaderService,
-    private router: Router,
-    public modal: ModalMessageComponent
-  ) {}
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {

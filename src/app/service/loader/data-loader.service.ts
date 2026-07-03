@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { perfNow } from 'src/app/util/util';
 import { FileNotFoundError, YamlService } from '../yaml-loader/yaml-loader.service';
 import { GithubService } from '../settings/github.service';
@@ -30,16 +30,16 @@ export class MissingModelError extends Error {
 
 @Injectable({ providedIn: 'root' })
 export class LoaderService {
+  private yamlService = inject(YamlService);
+  private githubService = inject(GithubService);
+  private notificationService = inject(NotificationService);
+
   private META_FILE: string = 'assets/YAML/meta.yaml';
   private DSOMM_MODEL_URL: string;
   private debug: boolean = false;
   private dataStore: DataStore | null = null;
 
-  constructor(
-    private yamlService: YamlService,
-    private githubService: GithubService,
-    private notificationService: NotificationService
-  ) {
+  constructor() {
     this.DSOMM_MODEL_URL = this.githubService.getDsommModelUrl() + '/tree/main/generated';
   }
 

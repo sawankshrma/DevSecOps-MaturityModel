@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { sum } from 'd3';
@@ -43,6 +43,10 @@ import { TopHeaderComponent } from '../../component/top-header/top-header.compon
   ],
 })
 export class TeamsComponent implements OnInit, AfterViewInit {
+  private loader = inject(LoaderService);
+  settings = inject(SettingsService);
+  modal = inject(ModalMessageComponent);
+
   dateStr = dateStr;
   dataStore: DataStore = new DataStore();
   canEdit: boolean = true;
@@ -59,12 +63,6 @@ export class TeamsComponent implements OnInit, AfterViewInit {
   allColumnNames: string[] = [];
   progressColumnNames: string[] = [];
   @ViewChild(MatSort, { static: false }) sort!: MatSort;
-
-  constructor(
-    private loader: LoaderService,
-    public settings: SettingsService,
-    public modal: ModalMessageComponent
-  ) {}
 
   ngOnInit(): void {
     console.log(`${perfNow()}: Teams: Loading yamls...`);

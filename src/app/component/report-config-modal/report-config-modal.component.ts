@@ -1,4 +1,4 @@
-import { Component, Inject, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import {
   ReportConfig,
@@ -51,6 +51,9 @@ export interface ReportConfigModalData {
   ],
 })
 export class ReportConfigModalComponent {
+  dialogRef = inject<MatDialogRef<ReportConfigModalComponent>>(MatDialogRef);
+  data = inject<ReportConfigModalData>(MAT_DIALOG_DATA);
+
   config = signal<ReportConfig>(JSON.parse(JSON.stringify({})));
   allActivities: Activity[];
   allTeams: string[];
@@ -76,10 +79,9 @@ export class ReportConfigModalComponent {
     return a.showDescription || a.showRisk || a.showMeasure || a.showEvidence;
   });
 
-  constructor(
-    public dialogRef: MatDialogRef<ReportConfigModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: ReportConfigModalData
-  ) {
+  constructor() {
+    const data = this.data;
+
     // Deep copy config to avoid mutating the original until save
     this.config.set(JSON.parse(JSON.stringify(data.config)));
     this.allActivities = data.allActivities;

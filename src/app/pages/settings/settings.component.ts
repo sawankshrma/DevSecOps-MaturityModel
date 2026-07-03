@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -76,6 +76,12 @@ interface ProgressDefinitionForm {
   ],
 })
 export class SettingsComponent implements OnInit {
+  private loader = inject(LoaderService);
+  private settings = inject(SettingsService);
+  private formBuilder = inject(FormBuilder);
+  modal = inject(ModalMessageComponent);
+  private githubService = inject(GithubService);
+
   meta!: MetaStore;
   progressStore!: ProgressStore;
   dataStoreMaxLevel!: number;
@@ -113,14 +119,6 @@ export class SettingsComponent implements OnInit {
   isNewerAvailable: boolean | null = null;
   latestDownloadUrl: string | null = null;
   latestReleasePublishedDate: Date | null = null;
-
-  constructor(
-    private loader: LoaderService,
-    private settings: SettingsService,
-    private formBuilder: FormBuilder,
-    public modal: ModalMessageComponent,
-    private githubService: GithubService
-  ) {}
 
   ngOnInit(): void {
     this.initialize();

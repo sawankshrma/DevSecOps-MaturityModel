@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
@@ -13,14 +13,13 @@ export interface GithubReleaseInfo {
   providedIn: 'root',
 })
 export class GithubService {
+  private http = inject(HttpClient);
+
   /* eslint-disable */
   private readonly DSOMM_MODEL_URL = 'https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel-data/';
   private readonly CHANGELOG_URL = this.DSOMM_MODEL_URL + '/blob/main/CHANGELOG.md';
   private readonly LATEST_RELEASE_URL = this.DSOMM_MODEL_URL.replace('//github.com', '//api.github.com/repos') + 'releases/latest';
   private readonly DOWNLOAD_URL_TEMPLATE = this.DSOMM_MODEL_URL.replace('//github.com', '//raw.githubusercontent.com') + '{tag}/generated/model.yaml';
-  /* eslint-enable */
-
-  constructor(private http: HttpClient) {}
 
   public getDsommModelUrl(): string {
     return this.DSOMM_MODEL_URL;

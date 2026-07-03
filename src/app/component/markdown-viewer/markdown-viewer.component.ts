@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import md from 'markdown-it';
 import { HttpClient } from '@angular/common/http';
 
@@ -9,13 +9,14 @@ import { HttpClient } from '@angular/common/http';
   standalone: true,
 })
 export class MarkdownViewerComponent implements OnInit {
+  private http = inject(HttpClient);
+
   @Input() MDFile: string = '';
   markdown: md = md({
     html: true,
   });
   markdownURI: any;
   toRender: string = '';
-  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.loadMarkdownFiles(this.MDFile);

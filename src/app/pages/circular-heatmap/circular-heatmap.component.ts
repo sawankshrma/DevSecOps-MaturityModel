@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { equalArray } from 'src/app/util/util';
 import { LoaderService } from 'src/app/service/loader/data-loader.service';
 import * as d3 from 'd3';
@@ -65,6 +65,17 @@ import { ActivityDescriptionComponent } from '../../component/activity-descripti
   ],
 })
 export class CircularHeatmapComponent implements OnInit, OnDestroy {
+  private loader = inject(LoaderService);
+  private sectorService = inject(SectorService);
+  private settings = inject(SettingsService);
+  private themeService = inject(ThemeService);
+  private titleService = inject(TitleService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private location = inject(Location);
+  private dialog = inject(MatDialog);
+  modal = inject(ModalMessageComponent);
+
   Routing: string = '/activity-description';
   markdown: md = md();
   showOverlay: boolean = false;
@@ -91,18 +102,7 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(
-    private loader: LoaderService,
-    private sectorService: SectorService,
-    private settings: SettingsService,
-    private themeService: ThemeService,
-    private titleService: TitleService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private location: Location,
-    private dialog: MatDialog,
-    public modal: ModalMessageComponent
-  ) {
+  constructor() {
     this.theme = this.themeService.getTheme();
   }
 

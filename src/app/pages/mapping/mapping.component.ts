@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, inject } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
@@ -73,6 +73,10 @@ enum SortMode {
   ],
 })
 export class MappingComponent implements OnInit, AfterViewInit {
+  private loader = inject(LoaderService);
+  private settings = inject(SettingsService);
+  modal = inject(ModalMessageComponent);
+
   allMappings: MappingRow[] = [];
   dataSource = new MatTableDataSource<MappingRow>([]);
 
@@ -98,12 +102,6 @@ export class MappingComponent implements OnInit, AfterViewInit {
 
   searchTerms: string[] = [];
   searchCtrl = new FormControl('');
-
-  constructor(
-    private loader: LoaderService,
-    private settings: SettingsService,
-    public modal: ModalMessageComponent
-  ) {}
 
   ngOnInit(): void {
     console.log(`${perfNow()}: Mapping: Loading yamls...`);

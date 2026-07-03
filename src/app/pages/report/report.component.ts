@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { LoaderService } from '../../service/loader/data-loader.service';
 import { SettingsService } from '../../service/settings/settings.service';
@@ -65,6 +65,11 @@ export interface LevelOverview {
   ],
 })
 export class ReportComponent implements OnInit {
+  private loader = inject(LoaderService);
+  private settings = inject(SettingsService);
+  private dialog = inject(MatDialog);
+  private datePipe = inject(DatePipe);
+
   reportConfig = signal<ReportConfig>(getReportConfig());
   allActivities = signal<Activity[]>([]);
   isLoading: boolean = true;
@@ -176,13 +181,6 @@ export class ReportComponent implements OnInit {
     }
     return count;
   });
-
-  constructor(
-    private loader: LoaderService,
-    private settings: SettingsService,
-    private dialog: MatDialog,
-    private datePipe: DatePipe
-  ) {}
 
   ngOnInit(): void {
     this.loadActivities();

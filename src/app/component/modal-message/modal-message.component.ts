@@ -1,4 +1,4 @@
-import { Inject, Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
@@ -19,6 +19,10 @@ import { MatButtonModule } from '@angular/material/button';
   imports: [MatDialogModule, MatButtonModule],
 })
 export class ModalMessageComponent implements OnInit {
+  dialog = inject(MatDialog);
+  dialogRef = inject<MatDialogRef<ModalMessageComponent>>(MatDialogRef);
+  private notificationService = inject(NotificationService);
+
   data: DialogInfo;
   markdown: md = md();
 
@@ -26,12 +30,9 @@ export class ModalMessageComponent implements OnInit {
   DSOMM_url: string = `${this.DSOMM_host}/DevSecOps-MaturityModel-data`;
   meassageTemplates: Record<string, DialogInfo> = {};
 
-  constructor(
-    public dialog: MatDialog,
-    public dialogRef: MatDialogRef<ModalMessageComponent>,
-    @Inject(MAT_DIALOG_DATA) data: DialogInfo,
-    private notificationService: NotificationService
-  ) {
+  constructor() {
+    const data = inject<DialogInfo>(MAT_DIALOG_DATA);
+
     this.data = data;
   }
 

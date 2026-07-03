@@ -1,4 +1,4 @@
-import { Component, OnInit, computed } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { ThemeService } from './service/theme.service';
 import { TitleService } from './service/title.service';
 import { SidenavButtonsComponent } from './component/sidenav-buttons/sidenav-buttons.component';
@@ -26,6 +26,9 @@ import { MatToolbarModule } from '@angular/material/toolbar';
   ],
 })
 export class AppComponent implements OnInit {
+  private themeService = inject(ThemeService);
+  private titleService = inject(TitleService);
+
   defaultTitle = '';
   menuIsOpen: boolean = true;
   sidenavWidth: string = '250px';
@@ -36,10 +39,7 @@ export class AppComponent implements OnInit {
     return info?.level ? 'Level ' + info.level : '';
   });
 
-  constructor(
-    private themeService: ThemeService,
-    private titleService: TitleService
-  ) {
+  constructor() {
     this.themeService.initTheme();
   }
 

@@ -1,4 +1,12 @@
-import { Component, OnInit, Input, ElementRef, SimpleChanges, OnChanges } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  ElementRef,
+  SimpleChanges,
+  OnChanges,
+  inject,
+} from '@angular/core';
 import * as d3 from 'd3';
 import { LoaderService } from '../../service/loader/data-loader.service';
 import { Activity } from 'src/app/model/activity-store';
@@ -40,6 +48,9 @@ interface ThemeColors {
   standalone: true,
 })
 export class DependencyGraphComponent implements OnInit, OnChanges {
+  private loader = inject(LoaderService);
+  private themeService = inject(ThemeService);
+
   css: CSSStyleDeclaration = getComputedStyle(document.body);
   themeColors: Partial<ThemeColors> = {};
   theme: string;
@@ -52,10 +63,7 @@ export class DependencyGraphComponent implements OnInit, OnChanges {
 
   @Output() activityClicked = new EventEmitter<string>();
 
-  constructor(
-    private loader: LoaderService,
-    private themeService: ThemeService
-  ) {
+  constructor() {
     this.theme = this.themeService.getTheme();
     this.setThemeColors(this.theme);
   }

@@ -1,4 +1,4 @@
-import { Component, computed } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { MatIconRegistry, MatIconModule } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { GITHUB_SVG } from '../../../assets/svg_icons';
@@ -15,6 +15,10 @@ import { MatListModule } from '@angular/material/list';
   imports: [MatListModule, RouterLink, MatIconModule, MatDividerModule],
 })
 export class SidenavButtonsComponent {
+  private themeService = inject(ThemeService);
+  private iconRegistry = inject(MatIconRegistry);
+  private sanitizer = inject(DomSanitizer);
+
   Options: string[] = [
     'Overview',
     'Matrix',
@@ -54,11 +58,7 @@ export class SidenavButtonsComponent {
 
   isNightMode = computed(() => this.themeService.theme() === 'dark');
 
-  constructor(
-    private themeService: ThemeService,
-    private iconRegistry: MatIconRegistry,
-    private sanitizer: DomSanitizer
-  ) {
+  constructor() {
     this.iconRegistry.addSvgIconLiteral(
       'github',
       this.sanitizer.bypassSecurityTrustHtml(GITHUB_SVG)

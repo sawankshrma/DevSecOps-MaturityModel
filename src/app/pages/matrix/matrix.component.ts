@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, signal, computed } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, signal, computed, inject } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { Router, NavigationExtras } from '@angular/router';
@@ -43,6 +43,11 @@ type LevelKey = keyof Pick<MatrixRow, 'level1' | 'level2' | 'level3' | 'level4' 
   ],
 })
 export class MatrixComponent implements OnInit {
+  private loader = inject(LoaderService);
+  private settings = inject(SettingsService);
+  private router = inject(Router);
+  private notificationService = inject(NotificationService);
+
   Routing: string = '/activity-description';
   dataStore: DataStore = new DataStore();
   data: Data = {};
@@ -92,14 +97,6 @@ export class MatrixComponent implements OnInit {
     }
     return itemsStage2;
   });
-
-  /* eslint-disable */
-  constructor(
-    private loader: LoaderService,
-    private settings: SettingsService,
-    private router: Router,
-    private notificationService: NotificationService
-  ) {}
   /* eslint-enable */
 
   reset() {

@@ -109,7 +109,7 @@ html {
     --mdc-dialog-container-color: var(--background-primary);
     --mdc-dialog-subhead-color: var(--text-primary);
     --mdc-dialog-supporting-text-color: var(--text-primary);
-    --mdc-dialog-container-shape: 24px;
+    --mdc-dialog-container-shape: 0px;
       background-color: var(--background-primary);
       color: var(--text-primary);
       border: 1px solid var(--border-medium);
@@ -120,7 +120,10 @@ html {
       background-color: var(--background-tertiary);
     }
 
-    
+    .mat-mdc-dialog-surface {
+      background-color: var(--background-primary);
+    }
+        
   .mat-mdc-slider {
     --mat-slider-hover-state-layer-color: transparent;
     --mat-slider-focus-state-layer-color: transparent;

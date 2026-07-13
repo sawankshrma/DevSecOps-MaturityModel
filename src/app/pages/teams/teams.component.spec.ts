@@ -8,6 +8,7 @@ import { TeamsComponent } from './teams.component';
 import { ModalMessageComponent } from 'src/app/component/modal-message/modal-message.component';
 import { LoaderService } from 'src/app/service/loader/data-loader.service';
 import { MockLoaderService } from 'src/app/service/loader/mock-data-loader.service';
+import { DataStore } from 'src/app/model/data-store';
 import { isEmptyObj, perfNow } from 'src/app/util/util';
 
 let mockLoaderService: MockLoaderService;
@@ -15,11 +16,14 @@ let mockLoaderService: MockLoaderService;
 describe('TeamsComponent', () => {
   let component: TeamsComponent;
   let fixture: ComponentFixture<TeamsComponent>;
+  let mockDataStore: DataStore;
   mockLoaderService = new MockLoaderService({});
 
   beforeEach(async () => {
+    // Pre-load data BEFORE component creation to avoid async NG0100
+    mockDataStore = (await mockLoaderService.load()) as DataStore;
+
     /* eslint-disable */
-    // await mockLoaderService.load();
     await TestBed.configureTestingModule({
     imports: [NoopAnimationsModule, TeamsComponent],
     providers: [
@@ -33,12 +37,11 @@ describe('TeamsComponent', () => {
     /* eslint-enable */
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     fixture = TestBed.createComponent(TeamsComponent);
     component = fixture.componentInstance;
-
-    fixture.detectChanges();
-    await fixture.whenStable();
+    // Set data synchronously BEFORE first change detection
+    component.setYamlData(mockDataStore);
     fixture.detectChanges();
   });
 

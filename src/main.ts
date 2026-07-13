@@ -15,7 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { AppRoutingModule } from './app/app-routing.module';
 import { BrowserModule, bootstrapApplication } from '@angular/platform-browser';
@@ -34,13 +34,11 @@ bootstrapApplication(AppComponent, {
       BrowserModule,
       AppRoutingModule,
       MatDialogModule,
-      ReactiveFormsModule,
       MatToolbarModule,
       MatMenuModule,
       MatSidenavModule,
       MatIconModule,
       MatButtonModule,
-      FormsModule,
       MatTooltipModule
     ),
     LoaderService,

@@ -17,27 +17,28 @@ describe('ProgressSliderComponent', () => {
     fixture = TestBed.createComponent(ProgressSliderComponent);
     component = fixture.componentInstance;
     component.steps = ['Step 1', 'Step 2', 'Step 3'];
-    fixture.detectChanges();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
   it('should initialize with the correct initial step', () => {
     component.state = 'Step 2';
-    component.ngOnInit();
+    fixture.detectChanges();
     expect(component.currentValue).toBe(1);
   });
 
   it('should emit step changes', () => {
+    fixture.detectChanges();
     spyOn(component.progressChange, 'emit');
     component.onStepChange(2);
     expect(component.progressChange.emit).toHaveBeenCalledWith('Step 3');
   });
 
   it('should display the correct step label', () => {
-    component.currentValue = 1;
+    component.state = 'Step 2';
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.step-label')?.textContent).toContain('Step 2');

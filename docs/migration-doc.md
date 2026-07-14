@@ -498,6 +498,59 @@ Two clean version bumps (19, then 20) across Core, CLI, Material, and CDK, inter
 
 </details>
 
+<details>
+<summary><strong>Angular 20 → 21 + Dependency Security Audit</strong></summary>
+
+### Summary
+
+Two straightforward `ng update` passes (Core/CLI, then Material/CDK) to reach Angular 21, followed by a round of test fixes required by Angular 21's stricter TestBed change-detection error rethrow (`NG0100`), and a full dependency security audit that dropped vulnerability count from 33 to 1.
+
+### Commit History
+
+#### 1. Chore: Upgrade Angular Core & CLI to v21 ([186d547a](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/186d547a))
+- Executed `ng update @angular/core@21 @angular/cli@21`.
+
+#### 2. Chore: Upgrade Angular Material & CDK to v21 ([fe574695](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/fe574695))
+- Executed `ng update @angular/material@21 @angular/cdk@21`.
+
+#### 3. Fix: Resolve NG0100 Test Failures from Angular 21 TestBed Error Rethrow ([da2bdb34](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/da2bdb34))
+- **Action:** Fixed test failures surfaced by Angular 21's stricter enforcement around change-detection errors during `TestBed` runs.
+- **Key Changes:**
+  - `progress-slider.component.spec.ts`, `top-header.component.spec.ts`: Moved `fixture.detectChanges()` out of the shared `beforeEach()` into each individual test, since a global `detectChanges()` call before test-specific state was set (e.g. `component.state`) caused a second, differing `detectChanges()` later in the same test to throw `NG0100`.
+  - `teams.component.spec.ts`: Pre-loaded mock data via `mockLoaderService.load()` before component creation and now sets it synchronously with `setYamlData()` prior to the first `detectChanges()`, resolving an async `NG0100` caused by data arriving after the component's first render.
+  - `usage.component.ts`: Added a null guard (`if (page && page.match(...))`) before the CWE-79 sanitization check, since `params['page']` could be `undefined` on some routes.
+  - `main.ts`: Removed unused `ReactiveFormsModule` / `FormsModule` imports left over from the standalone migration.
+- **Files:** `progress-slider.component.spec.ts`, `top-header.component.spec.ts`, `teams.component.spec.ts`, `usage.component.ts`, `main.ts`
+
+#### 4. Chore: Remove Unused Grafana SDK, Patch Vulnerabilities via Bumps/Overrides (33→1) ([2a14047e](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/2a14047e))
+- **Action:** Ran a full dependency security audit against `package.json`.
+- **Key Changes:**
+  - Removed `@grafana/faro-web-sdk` and `@grafana/faro-web-tracing`, unused anywhere in `src/`. Eliminated ~20 vulnerabilities on its own by dropping the entire `@opentelemetry/*` stack 
+  - Bumped `js-yaml` 4.1.0 → 4.3.0
+  - Bumped `yaml` 2.8.1 → 2.9.0
+  - Bumped `@types/node` 12.11.1 → 20.19.0 (dev-only types, years out of date).
+  - Bumped `karma` 6.3.0 → 6.4.4 (satisfies Angular 21's `karma@^6.4.0` peer dependency, clearing an `ERESOLVE` warning).
+  - Bumped `prettier-eslint` 16.3.0 → 17.1.1 (drops its bundled EOL ESLint 8, clearing 3 deprecation warnings and a vulnerable `minimatch`).
+  - Bumped `qs` 6.11.0 → 6.15.3
+  - Added an `overrides` entry pinning `uuid` to `11.1.1` across the tree, fixing a buffer bounds-check issue nested inside Angular's own build tooling (`webpack-dev-server → sockjs → uuid@8.3.2`).
+  - Also bumped `@ngneat/until-destroy`, `d3`, `markdown-it`, `rxjs`, and `prettier` as part of the same pass.
+- **Result:** Vulnerabilities reduced from 33 → 1. The one remaining issue is an unfixable `xlsx`/SheetJS ReDoS + prototype pollution vulnerability, deferred to a future PR since resolving it requires code changes wherever `xlsx` is imported.
+- **Files:** `package.json`, `package-lock.json`
+
+ Vulnerability Reduction
+
+| Stage | Vulnerabilities | Deprecation Warnings |
+|-------|:-:|:-:|
+| Starting point (Angular 21) | 33 | 5 |
+| After Grafana removal | 14 | 5 |
+| After `npm audit fix` + bumps | 9 | 4 |
+| After `uuid` override | 4 | 3 |
+| After `prettier-eslint` bump + `minimatch` override removed | **1** | **0** |
+
+---
+
+</details>
+
 ---
 
 ## Signal Migration
@@ -566,21 +619,23 @@ Each component toggle below documents a single commit.
 
 </details>
 
+
+
   
 
 ---
 
 ## Backlog
 
-  
-
-Known issues deferred from the Angular 14 → 15 migration. These should be addressed alongside or after the upgrade to Angular 21.
-
-| # | Component | Issue | Priority | Notes |
+| # | Area | Issue | Priority | Notes |
 |---|-----------|-------|----------|-------|
-
-
+| 1 | `xlsx` (SheetJS) dependency | Prototype pollution + ReDoS vulnerability, no upstream fix available (maintainers stopped publishing security patches) | High | Requires code changes wherever `xlsx` is imported for spreadsheet export. Options: replace with `exceljs` or `xlsx-js-style` (community fork), or accept risk if only used for non-sensitive data export. <b>Needs a dedicated PR.</b> |
+| 2 | `CircularHeatmapComponent` — team/group chip filters | Group highlight uses an order-sensitive array comparison (`equalArray` checks `v === b[i]` positionally). `filtersTeamGroups[group]` compares chip/DOM order (alphabetical, from `keyvalue` pipe with no comparator) against YAML declaration order, so any group whose YAML team list isn't already alphabetical never highlights, even with the exact right teams selected. | Medium | Fix: sort both sides before comparing, or use a set-based comparison. |
+| 3 | `CircularHeatmapComponent` — team/group chip filters | Clicking a single team chip can wipe all team filters applied via a group. `toggleTeamGroupFilter` mutates `filtersTeams` in place, but the template reads it through a pure `keyvalue` pipe cached on object reference, so chips/listbox never see the group selection. A subsequent single-chip click then rebuilds the whole filter map from just that chip's value, silently dropping any teams selected via the group. | Medium | Right fix: move filter state to signals (as `matrix.component.ts` already does)|
+| 4 | `CircularHeatmapComponent` — team/group chip filters | Deselecting a "Team Group" chip visually deselects the group chip, but the underlying team selection isn't actually cleared, it just doesn't reflect in the UI. Decision: preserve current live behavior at [dsomm.owasp.org](https://dsomm.owasp.org/) | Low | Will be resolved in the Signal Migaration Re-write |
 
 > [!NOTE]
+> Items 2–4 are deferred to a separate PR that will migrate `CircularHeatmapComponent` fully to Signals. The rewrite fixes the underlying state-management issue causing all three: the array-order-sensitive comparison (2), the stale `filtersTeams` reference from in-place mutation (3), and the group/team selection mismatch (4).
 
+> [!NOTE]
 > Add new backlog items here as they are discovered during future upgrades. Remove items once resolved.

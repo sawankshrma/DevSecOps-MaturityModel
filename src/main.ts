@@ -4,7 +4,6 @@ document.body.classList.add(`${savedTheme}-theme`);
 console.log('[main.ts] Theme set to:', savedTheme); //
 
 import { enableProdMode, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
 import { environment } from './environments/environment';
 import { AppComponent } from './app/app.component';

@@ -5,7 +5,6 @@ import { AppComponent } from './app.component';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ThemeService } from './service/theme.service';
 import { TitleService } from './service/title.service';
 
@@ -36,13 +35,7 @@ describe('AppComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        MatToolbarModule,
-        MatIconModule,
-        MatSidenavModule,
-        BrowserAnimationsModule,
-        AppComponent,
-      ],
+      imports: [MatToolbarModule, MatIconModule, MatSidenavModule, AppComponent],
       providers: [
         provideRouter([]),
         { provide: ThemeService, useClass: MockThemeService },

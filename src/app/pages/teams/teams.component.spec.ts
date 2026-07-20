@@ -2,7 +2,6 @@ import { HttpHandler, provideHttpClient, withInterceptorsFromDi } from '@angular
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { TeamsComponent } from './teams.component';
 import { ModalMessageComponent } from 'src/app/component/modal-message/modal-message.component';
@@ -25,7 +24,7 @@ describe('TeamsComponent', () => {
 
     /* eslint-disable */
     await TestBed.configureTestingModule({
-    imports: [NoopAnimationsModule, TeamsComponent],
+    imports: [TeamsComponent],
     providers: [
         provideRouter([]),
         provideHttpClientTesting(),

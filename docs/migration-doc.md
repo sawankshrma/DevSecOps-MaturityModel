@@ -547,6 +547,24 @@ Two straightforward `ng update` passes (Core/CLI, then Material/CDK) to reach An
 | After `uuid` override | 4 | 3 |
 | After `prettier-eslint` bump + `minimatch` override removed | **1** | **0** |
 
+
+#### 5. Chore: Remove unused deps and migrate test env to static platform ([431328a](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/431328a))
+- Removed `@angular/platform-browser-dynamic` (runtime + types) after completing the `bootstrapApplication` migration in `main.ts`.
+- Dropped unused packages: `js-yaml`, `@types/js-yaml`, `@types/node`, `@angular-eslint/schematics`, `@typescript-eslint/eslint-plugin`, `prettier-eslint`, `qs`.
+- Bumped `@typescript-eslint/parser` to `8.64.0`.
+- Migrated `test.ts` from `BrowserDynamicTestingModule` to `BrowserTestingModule` (static platform).
+
+#### 6. Chore(deps): Remove `@angular/animations` ([d55c9b8](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/d55c9b8))
+- Removed `@angular/animations` package and all related imports (`provideAnimations`, `BrowserAnimationsModule`, `NoopAnimationsModule`) from `main.ts` and test specs.
+
+#### 7. Chore: Migrate build toolchain from `@angular-devkit/build-angular` to `@angular/build` ([a7e3cf6](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/a7e3cf6))
+- Switched build, serve, and extract-i18n builders to the leaner `@angular/build` package (esbuild/Vite only, no Webpack baggage).
+- Karma test builder remains on `@angular-devkit/build-angular` (karma plugin not available in `@angular/build`).
+
+#### 8. Chore: Approve install scripts for build toolchain dependencies ([426666c](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/426666c))
+- Allowlisted `esbuild`, `lmdb`, `msgpackr-extract`, `@parcel/watcher` install scripts in both npm (`allowScripts`) and pnpm (`pnpm-workspace.yaml` `allowBuilds`).
+- Moved `uuid` override into `pnpm-workspace.yaml` for pnpm v11 compatibility.
+
 ---
 
 </details>
@@ -629,14 +647,10 @@ Each component toggle below documents a single commit.
 
 | # | Area | Issue | Priority | Notes |
 |---|-----------|-------|----------|-------|
-| 1 | `xlsx` (SheetJS) dependency | Prototype pollution + ReDoS vulnerability, no upstream fix available (maintainers stopped publishing security patches) | High | Requires code changes wherever `xlsx` is imported for spreadsheet export. Options: replace with `exceljs` or `xlsx-js-style` (community fork), or accept risk if only used for non-sensitive data export. <b>Needs a dedicated PR.</b> |
-| 2 | `CircularHeatmapComponent` — team/group chip filters | Group highlight uses an order-sensitive array comparison (`equalArray` checks `v === b[i]` positionally). `filtersTeamGroups[group]` compares chip/DOM order (alphabetical, from `keyvalue` pipe with no comparator) against YAML declaration order, so any group whose YAML team list isn't already alphabetical never highlights, even with the exact right teams selected. | Medium | Fix: sort both sides before comparing, or use a set-based comparison. |
-| 3 | `CircularHeatmapComponent` — team/group chip filters | Clicking a single team chip can wipe all team filters applied via a group. `toggleTeamGroupFilter` mutates `filtersTeams` in place, but the template reads it through a pure `keyvalue` pipe cached on object reference, so chips/listbox never see the group selection. A subsequent single-chip click then rebuilds the whole filter map from just that chip's value, silently dropping any teams selected via the group. | Medium | Right fix: move filter state to signals (as `matrix.component.ts` already does)|
-| 4 | `CircularHeatmapComponent` — team/group chip filters | Deselecting a "Team Group" chip visually deselects the group chip, but the underlying team selection isn't actually cleared, it just doesn't reflect in the UI. Decision: preserve current live behavior at [dsomm.owasp.org](https://dsomm.owasp.org/) | Low | Will be resolved in the Signal Migaration Re-write |
-| 5 | Logging | Replace `console.log()` and boolean `environment.production` checks with a proper logging library using log-level feature toggles. Preferred Library: [Winston](https://github.com/winstonjs/winston). | Medium | Discussed in team meeting. |
-
-> [!NOTE]
-> Items 2–4 are deferred to a separate PR that will migrate `CircularHeatmapComponent` fully to Signals. The rewrite fixes the underlying state-management issue causing all three: the array-order-sensitive comparison (2), the stale `filtersTeams` reference from in-place mutation (3), and the group/team selection mismatch (4).
+| 1 | `xlsx` (SheetJS) dependency | Prototype pollution + ReDoS vulnerability, no upstream fix available (maintainers stopped publishing security patches) | Medium | Requires code changes wherever `xlsx` is imported for spreadsheet export. Options: replace with `exceljs` or `xlsx-js-style` (community fork), or accept risk if only used for non-sensitive data export. <b>Needs a dedicated PR.</b> |
+| 2 | `CircularHeatmapComponent` | • **Order-sensitive group highlight:** `equalArray` compares chip/DOM order against YAML declaration order — mismatched order prevents highlighting. Fix: set-based comparison. <br>• **Group selection wipe:** `toggleTeamGroupFilter` mutates `filtersTeams` in place, but `keyvalue` pipe caches on object reference — a subsequent single-chip click drops group-selected teams. Fix: signal-based state. <br>• **Stale group deselection:** Deselecting a group chip visually deselects it but doesn't clear the underlying team selection. <br>• **Layout shift on scroll:** Heatmap shifts vertically at certain viewport widths. | High | All issues will be fixed in one upcoming PR — migrating `CircularHeatmapComponent` to Signals (as `MatrixComponent` already does). |
+| 3 | Logging | Replace `console.log()` and boolean `environment.production` checks with a proper logging library using log-level feature toggles. Preferred Library: [Winston](https://github.com/winstonjs/winston). | Low | Discussed in team meeting. |
+| 4 | Test Runner | • **Deprecated subdependencies:** Karma pulls in `glob@7.2.3`, `inflight@1.0.6`, and `rimraf@3.0.2` — all deprecated, cluttering `pnpm install` with warnings. <br>• **pnpm incompatibility:** Karma's Webpack-based builder (`@angular-devkit/build-angular:karma`) cannot resolve transitive dependencies (e.g. `@babel/runtime`) under pnpm's strict symlinked `node_modules`. Currently requires `node-linker=hoisted` in `.npmrc` as a workaround, defeating pnpm's strictness benefits. <br>• **Modern tooling alignment:** Build/serve already use esbuild/Vite via `@angular/build`. Tests are the last piece still on the legacy Webpack pipeline. Migrating would allow dropping `@angular-devkit/build-angular` entirely. | High | Karma is deprecated. Migrate to a Vite-based test runner (e.g. Vitest or `@angular/build` native test support). |
 
 > [!NOTE]
 > Add new backlog items here as they are discovered during future upgrades. Remove items once resolved.

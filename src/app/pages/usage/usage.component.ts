@@ -20,7 +20,7 @@ export class UsageComponent implements OnInit {
       this.route.params.subscribe(params => {
         let page = params['page'];
         // CWE-79 - sanitize input
-        if (page.match(/^[\w.-]+$/)) {
+        if (page && page.match(/^[\w.-]+$/)) {
           this.page = page;
         }
       });

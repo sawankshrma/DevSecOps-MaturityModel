@@ -47,3 +47,6 @@ Thumbs.db
 /src/assets/YAML/generated/generated.yaml
 /src/assets/YAML/model.md
 /src/assets/YAML/dependency-tree.md
+
+#lock files for other package managers
+pnpm-lock.yaml

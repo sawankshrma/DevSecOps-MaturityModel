@@ -12,7 +12,6 @@ import { MarkdownText } from 'src/app/model/markdown-text';
 import { Data } from 'src/app/model/activity-store';
 import { isEmptyObj } from 'src/app/util/util';
 
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { DataStore } from 'src/app/model/data-store';
 
 let mockLoaderService: MockLoaderService;
@@ -71,7 +70,7 @@ describe('ActivityDescriptionComponent', () => {
         { provide: ActivatedRoute, useValue: mockActivatedRoute },
         { provide: LoaderService, useValue: mockLoaderService },
       ],
-      imports: [NoopAnimationsModule, ActivityDescriptionComponent, DependencyGraphStubComponent],
+      imports: [ActivityDescriptionComponent, DependencyGraphStubComponent],
     }).compileComponents();
   });
 

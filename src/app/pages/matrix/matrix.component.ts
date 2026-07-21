@@ -14,6 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { KeyValuePipe } from '@angular/common';
 import { TopHeaderComponent } from '../../component/top-header/top-header.component';
+import { environment } from 'src/environments/environment';
 
 export interface MatrixRow {
   Category: string;
@@ -192,7 +193,9 @@ export class MatrixComponent implements OnInit {
 
   toggleTagFilters(event: MatChipListboxChange) {
     const selectedValues: string[] = event.value || [];
-    console.log(`${perfNow()}: Matrix: Tag filter changed: [${selectedValues.join(', ')}]`);
+    if (!environment.production) {
+      console.log(`${perfNow()}: Matrix: Tag filter changed: [${selectedValues.join(', ')}]`);
+    }
     const newFilter: Record<string, boolean> = {};
     Object.keys(this.filtersTag()).forEach(key => {
       newFilter[key] = selectedValues.includes(key);
@@ -202,7 +205,9 @@ export class MatrixComponent implements OnInit {
 
   toggleDimensionFilters(event: MatChipListboxChange) {
     const selectedValues: string[] = event.value || [];
-    console.log(`${perfNow()}: Matrix: Dim filter changed: [${selectedValues.join(', ')}]`);
+    if (!environment.production) {
+      console.log(`${perfNow()}: Matrix: Dim filter changed: [${selectedValues.join(', ')}]`);
+    }
     const newFilter: Record<string, boolean> = {};
     Object.keys(this.filtersDim()).forEach(key => {
       newFilter[key] = selectedValues.includes(key);

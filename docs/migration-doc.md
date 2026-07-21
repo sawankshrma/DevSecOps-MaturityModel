@@ -498,6 +498,77 @@ Two clean version bumps (19, then 20) across Core, CLI, Material, and CDK, inter
 
 </details>
 
+<details>
+<summary><strong>Angular 20 → 21 + Dependency Security Audit</strong></summary>
+
+### Summary
+
+Two straightforward `ng update` passes (Core/CLI, then Material/CDK) to reach Angular 21, followed by a round of test fixes required by Angular 21's stricter TestBed change-detection error rethrow (`NG0100`), and a full dependency security audit that dropped vulnerability count from 33 to 1.
+
+### Commit History
+
+#### 1. Chore: Upgrade Angular Core & CLI to v21 ([186d547a](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/186d547a))
+- Executed `ng update @angular/core@21 @angular/cli@21`.
+
+#### 2. Chore: Upgrade Angular Material & CDK to v21 ([fe574695](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/fe574695))
+- Executed `ng update @angular/material@21 @angular/cdk@21`.
+
+#### 3. Fix: Resolve NG0100 Test Failures from Angular 21 TestBed Error Rethrow ([da2bdb34](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/da2bdb34))
+- **Action:** Fixed test failures surfaced by Angular 21's stricter enforcement around change-detection errors during `TestBed` runs.
+- **Key Changes:**
+  - `progress-slider.component.spec.ts`, `top-header.component.spec.ts`: Moved `fixture.detectChanges()` out of the shared `beforeEach()` into each individual test, since a global `detectChanges()` call before test-specific state was set (e.g. `component.state`) caused a second, differing `detectChanges()` later in the same test to throw `NG0100`.
+  - `teams.component.spec.ts`: Pre-loaded mock data via `mockLoaderService.load()` before component creation and now sets it synchronously with `setYamlData()` prior to the first `detectChanges()`, resolving an async `NG0100` caused by data arriving after the component's first render.
+  - `usage.component.ts`: Added a null guard (`if (page && page.match(...))`) before the CWE-79 sanitization check, since `params['page']` could be `undefined` on some routes.
+  - `main.ts`: Removed unused `ReactiveFormsModule` / `FormsModule` imports left over from the standalone migration.
+- **Files:** `progress-slider.component.spec.ts`, `top-header.component.spec.ts`, `teams.component.spec.ts`, `usage.component.ts`, `main.ts`
+
+#### 4. Chore: Remove Unused Grafana SDK, Patch Vulnerabilities via Bumps/Overrides (33→1) ([2a14047e](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/2a14047e))
+- **Action:** Ran a full dependency security audit against `package.json`.
+- **Key Changes:**
+  - Removed `@grafana/faro-web-sdk` and `@grafana/faro-web-tracing`, unused anywhere in `src/`. Eliminated ~20 vulnerabilities on its own by dropping the entire `@opentelemetry/*` stack 
+  - Bumped `js-yaml` 4.1.0 → 4.3.0
+  - Bumped `yaml` 2.8.1 → 2.9.0
+  - Bumped `@types/node` 12.11.1 → 20.19.0 (dev-only types, years out of date).
+  - Bumped `karma` 6.3.0 → 6.4.4 (satisfies Angular 21's `karma@^6.4.0` peer dependency, clearing an `ERESOLVE` warning).
+  - Bumped `prettier-eslint` 16.3.0 → 17.1.1 (drops its bundled EOL ESLint 8, clearing 3 deprecation warnings and a vulnerable `minimatch`).
+  - Bumped `qs` 6.11.0 → 6.15.3
+  - Added an `overrides` entry pinning `uuid` to `11.1.1` across the tree, fixing a buffer bounds-check issue nested inside Angular's own build tooling (`webpack-dev-server → sockjs → uuid@8.3.2`).
+  - Also bumped `@ngneat/until-destroy`, `d3`, `markdown-it`, `rxjs`, and `prettier` as part of the same pass.
+- **Result:** Vulnerabilities reduced from 33 → 1. The one remaining issue is an unfixable `xlsx`/SheetJS ReDoS + prototype pollution vulnerability, deferred to a future PR since resolving it requires code changes wherever `xlsx` is imported.
+- **Files:** `package.json`, `package-lock.json`
+
+ Vulnerability Reduction
+
+| Stage | Vulnerabilities | Deprecation Warnings |
+|-------|:-:|:-:|
+| Starting point (Angular 21) | 33 | 5 |
+| After Grafana removal | 14 | 5 |
+| After `npm audit fix` + bumps | 9 | 4 |
+| After `uuid` override | 4 | 3 |
+| After `prettier-eslint` bump + `minimatch` override removed | **1** | **0** |
+
+
+#### 5. Chore: Remove unused deps and migrate test env to static platform ([431328a](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/431328a))
+- Removed `@angular/platform-browser-dynamic` (runtime + types) after completing the `bootstrapApplication` migration in `main.ts`.
+- Dropped unused packages: `js-yaml`, `@types/js-yaml`, `@types/node`, `@angular-eslint/schematics`, `@typescript-eslint/eslint-plugin`, `prettier-eslint`, `qs`.
+- Bumped `@typescript-eslint/parser` to `8.64.0`.
+- Migrated `test.ts` from `BrowserDynamicTestingModule` to `BrowserTestingModule` (static platform).
+
+#### 6. Chore(deps): Remove `@angular/animations` ([d55c9b8](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/d55c9b8))
+- Removed `@angular/animations` package and all related imports (`provideAnimations`, `BrowserAnimationsModule`, `NoopAnimationsModule`) from `main.ts` and test specs.
+
+#### 7. Chore: Migrate build toolchain from `@angular-devkit/build-angular` to `@angular/build` ([a7e3cf6](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/a7e3cf6))
+- Switched build, serve, and extract-i18n builders to the leaner `@angular/build` package (esbuild/Vite only, no Webpack baggage).
+- Karma test builder remains on `@angular-devkit/build-angular` (karma plugin not available in `@angular/build`).
+
+#### 8. Chore: Approve install scripts for build toolchain dependencies ([426666c](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/426666c))
+- Allowlisted `esbuild`, `lmdb`, `msgpackr-extract`, `@parcel/watcher` install scripts in both npm (`allowScripts`) and pnpm (`pnpm-workspace.yaml` `allowBuilds`).
+- Moved `uuid` override into `pnpm-workspace.yaml` for pnpm v11 compatibility.
+
+---
+
+</details>
+
 ---
 
 ## Signal Migration
@@ -566,21 +637,20 @@ Each component toggle below documents a single commit.
 
 </details>
 
+
+
   
 
 ---
 
 ## Backlog
 
-  
-
-Known issues deferred from the Angular 14 → 15 migration. These should be addressed alongside or after the upgrade to Angular 21.
-
-| # | Component | Issue | Priority | Notes |
+| # | Area | Issue | Priority | Notes |
 |---|-----------|-------|----------|-------|
-
-
+| 1 | `xlsx` (SheetJS) dependency | Prototype pollution + ReDoS vulnerability, no upstream fix available (maintainers stopped publishing security patches) | Medium | Requires code changes wherever `xlsx` is imported for spreadsheet export. Options: replace with `exceljs` or `xlsx-js-style` (community fork), or accept risk if only used for non-sensitive data export. <b>Needs a dedicated PR.</b> |
+| 2 | `CircularHeatmapComponent` | • **Order-sensitive group highlight:** `equalArray` compares chip/DOM order against YAML declaration order — mismatched order prevents highlighting. Fix: set-based comparison. <br>• **Group selection wipe:** `toggleTeamGroupFilter` mutates `filtersTeams` in place, but `keyvalue` pipe caches on object reference — a subsequent single-chip click drops group-selected teams. Fix: signal-based state. <br>• **Stale group deselection:** Deselecting a group chip visually deselects it but doesn't clear the underlying team selection. <br>• **Layout shift on scroll:** Heatmap shifts vertically at certain viewport widths. | High | All issues will be fixed in one upcoming PR — migrating `CircularHeatmapComponent` to Signals (as `MatrixComponent` already does). |
+| 3 | Logging | Replace `console.log()` and boolean `environment.production` checks with a proper logging library using log-level feature toggles. Preferred Library: [Winston](https://github.com/winstonjs/winston). | Low | Discussed in team meeting. |
+| 4 | Test Runner | • **Deprecated subdependencies:** Karma pulls in `glob@7.2.3`, `inflight@1.0.6`, and `rimraf@3.0.2` — all deprecated, cluttering `pnpm install` with warnings. <br>• **pnpm incompatibility:** Karma's Webpack-based builder (`@angular-devkit/build-angular:karma`) cannot resolve transitive dependencies (e.g. `@babel/runtime`) under pnpm's strict symlinked `node_modules`. Currently requires `node-linker=hoisted` in `.npmrc` as a workaround, defeating pnpm's strictness benefits. <br>• **Modern tooling alignment:** Build/serve already use esbuild/Vite via `@angular/build`. Tests are the last piece still on the legacy Webpack pipeline. Migrating would allow dropping `@angular-devkit/build-angular` entirely. | High | Karma is deprecated. Migrate to a Vite-based test runner (e.g. Vitest or `@angular/build` native test support). |
 
 > [!NOTE]
-
 > Add new backlog items here as they are discovered during future upgrades. Remove items once resolved.

@@ -1,4 +1,12 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  inject,
+  signal,
+} from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
@@ -84,7 +92,7 @@ export class MappingComponent implements OnInit, AfterViewInit {
   knowledgeLabels: string[] = [];
   generalLabels: string[] = [];
 
-  allTeams: string[] = [];
+  allTeams = signal<string[]>([]);
   displayedColumns: string[] = [
     'dimension',
     'subDimension',
@@ -98,9 +106,9 @@ export class MappingComponent implements OnInit, AfterViewInit {
   @ViewChild('chipInput') chipInput!: ElementRef<HTMLInputElement>;
   @ViewChild(MatSort, { static: false }) sort!: MatSort;
 
-  dataStore: DataStore = new DataStore();
+  dataStore = signal<DataStore>(new DataStore());
 
-  searchTerms: string[] = [];
+  searchTerms = signal<string[]>([]);
   searchCtrl = new FormControl('');
 
   ngOnInit(): void {
@@ -138,8 +146,8 @@ export class MappingComponent implements OnInit, AfterViewInit {
   }
 
   setYamlData(dataStore: DataStore) {
-    this.dataStore = dataStore;
-    this.allTeams = dataStore.meta?.teams || [];
+    this.dataStore.set(dataStore);
+    this.allTeams.set(dataStore.meta?.teams || []);
     this.allMappings = this.transformDataStore(dataStore);
     this.dataSource.data = this.allMappings;
   }
@@ -193,31 +201,31 @@ export class MappingComponent implements OnInit, AfterViewInit {
     const input = event.target as HTMLInputElement;
     const value = input.value.trim();
     if (event.key === 'Enter' && value) {
-      if (!this.searchTerms.includes(value.toLowerCase())) {
-        this.searchTerms.push(value.toLowerCase());
+      if (!this.searchTerms().includes(value.toLowerCase())) {
+        this.searchTerms.update(terms => [...terms, value.toLowerCase()]);
         this.updateFilter();
       }
       input.value = '';
       this.searchCtrl.setValue('');
-    } else if (!value && this.searchTerms.length === 0) {
+    } else if (!value && this.searchTerms().length === 0) {
       this.dataSource.filter = '';
     }
   }
 
   removeSearchTerm(term: string) {
-    this.searchTerms = this.searchTerms.filter(t => t !== term);
+    this.searchTerms.update(terms => terms.filter(t => t !== term));
     this.updateFilter();
   }
 
   clearFilter() {
     console.log(`${perfNow()}: Mapping: Clear search filter`);
-    this.searchTerms = [];
+    this.searchTerms.set([]);
     this.dataSource.filter = '';
     this.searchCtrl.setValue('');
   }
 
   updateFilter() {
-    this.dataSource.filter = this.searchTerms.join(SEPARATOR);
+    this.dataSource.filter = this.searchTerms().join(SEPARATOR);
     console.log(
       `${perfNow()}: Mapping: Search filter: ${this.dataSource.filter?.replace(SEPARATOR, ', ')}`
     );

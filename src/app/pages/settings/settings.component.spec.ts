@@ -76,12 +76,12 @@ describe('SettingsComponent', () => {
   beforeEach(fakeAsync(() => {
     fixture = TestBed.createComponent(SettingsComponent);
     component = fixture.componentInstance;
-    component.meta = {
+    component.meta.set({
       activityMeta: null,
       activityFiles: [],
       progressDefinition: {},
       saveProgressDefinition: jasmine.createSpy('saveProgressDefinition'),
-    } as any;
+    } as any);
 
     fixture.detectChanges();
     tick();
@@ -95,14 +95,14 @@ describe('SettingsComponent', () => {
   it('should update max level settings correctly', fakeAsync(() => {
     component.onMaxLevelChange(3);
 
-    expect(component.selectedMaxLevel).toBe(3);
+    expect(component.selectedMaxLevel()).toBe(3);
     expect(settingsService.setMaxLevel).toHaveBeenCalledWith(3);
   }));
 
   it('should handle max level reset to default', fakeAsync(() => {
     component.onMaxLevelChange(5);
 
-    expect(component.selectedMaxLevel).toBe(5);
+    expect(component.selectedMaxLevel()).toBe(5);
 
     // Remove localStorage when settings' maxLevel is set to activity's maxLevel
     expect(settingsService.setMaxLevel).toHaveBeenCalledWith(null);

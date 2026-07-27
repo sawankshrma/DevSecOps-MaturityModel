@@ -4,7 +4,7 @@
     <mat-form-field appearance="outline" class="search-box">
       <mat-label>Search</mat-label>
       <mat-chip-grid #chipList aria-label="Search terms">
-        @for (term of searchTerms; track term) {
+        @for (term of searchTerms(); track term) {
           <mat-chip-row [removable]="true" (removed)="removeSearchTerm(term)">
             {{ term }}
             <button matChipRemove><mat-icon>cancel</mat-icon></button>
@@ -19,7 +19,7 @@
           placeholder="Type and press Enter..."
           [matChipInputAddOnBlur]="false" />
       </mat-chip-grid>
-      @if (searchTerms.length) {
+      @if (searchTerms().length) {
         <button mat-icon-button matSuffix (click)="clearFilter()">
           <mat-icon>close</mat-icon>
         </button>
@@ -114,7 +114,7 @@
       <th>SAMM</th>
       <th>ISO 27001:2017</th>
       <th>ISO 27001:2022</th>
-      @for (team of allTeams; track team) {
+      @for (team of allTeams(); track team) {
         <th>
           {{ team + ' - Status' }}
         </th>
@@ -209,10 +209,10 @@
             {{ item.ISO22 | slice: 0 : 32767 }}
           }
         </td>
-        @for (team of allTeams; track team) {
+        @for (team of allTeams(); track team) {
           <td>
-            @if (dataStore.progressStore) {
-              {{ dataStore.progressStore.getTeamActivityTitle(item.uuid, team) }}
+            @if (dataStore().progressStore) {
+              {{ dataStore().progressStore?.getTeamActivityTitle(item.uuid, team) }}
             }
           </td>
         }

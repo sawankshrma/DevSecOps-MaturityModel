@@ -27,13 +27,13 @@
           id="maxLevelSlider"
           showTickMarks
           min="1"
-          [max]="dataStoreMaxLevel || 5"
+          [max]="dataStoreMaxLevel() || 5"
           step="1"
           class="max-slider"
           #ngSlider
           ><input
             matSliderThumb
-            [value]="selectedMaxLevel"
+            [value]="selectedMaxLevel()"
             (input)="
               onMaxLevelChange(
                 { source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value }.value
@@ -41,7 +41,7 @@
             "
             #ngSliderThumb="matSliderThumb" />
         </mat-slider>
-        <span class="caption">{{ selectedMaxLevelCaption }}</span>
+        <span class="caption">{{ selectedMaxLevelCaption() }}</span>
       </div>
     </mat-card-content>
   </mat-card>
@@ -50,10 +50,10 @@
     <div class="selectable-list">
       <div class="selectable-list-header">
         <h2>Progress Definitions</h2>
-        @if (editingProgressDefinitions) {
+        @if (editingProgressDefinitions()) {
           <div class="edit-hint">Click Accept when finished</div>
         }
-        @if (!editingProgressDefinitions) {
+        @if (!editingProgressDefinitions()) {
           <button
             mat-icon-button
             (click)="toggleProgressDefinitionsEdit()"
@@ -61,7 +61,7 @@
             <mat-icon>edit</mat-icon>
           </button>
         }
-        @if (editingProgressDefinitions) {
+        @if (editingProgressDefinitions()) {
           <span>
             <button
               mat-icon-button
@@ -80,7 +80,7 @@
       </div>
 
       <div class="progress-definitions-grid" [formGroup]="progressDefinitionsForm">
-        @if (editingProgressDefinitions) {
+        @if (editingProgressDefinitions()) {
           <ng-container formArrayName="definitions">
             @for (definition of definitionsFormArray.controls; track definition; let i = $index) {
               <ng-container [formGroup]="getDefinitionGroup(i)">
@@ -146,7 +146,7 @@
           }
         }
       </div>
-      @if (editingProgressDefinitions) {
+      @if (editingProgressDefinitions()) {
         <div class="help-text">
           <p>
             Define custom progression stages that match your team's workflow. Choose names and
@@ -187,7 +187,7 @@
         While the application is the tool for assessing and tracking DevSecOps maturity, i.e. using
         the model.<br />
       </p>
-      @if (meta.activityMeta?.getDsommVersion()) {
+      @if (meta()?.activityMeta?.getDsommVersion()) {
         <p>The current version of the DSOMM model in use is:</p>
         <div class="version-info-section">
           <div class="version-info-table">
@@ -195,24 +195,24 @@
             <div class="grid-col-1 grid-row-1">Model version</div>
             <div class="grid-col-1 grid-row-2">Release date</div>
             <div class="grid-col-2 grid-row-1">
-              {{ meta.activityMeta?.getDsommVersion() || '' }}
+              {{ meta()?.activityMeta?.getDsommVersion() || '' }}
             </div>
             <div class="grid-col-2 grid-row-2">
-              {{ dateFormat(meta.activityMeta?.getDsommReleaseDate()) }}
+              {{ dateFormat(meta()?.activityMeta?.getDsommReleaseDate()) }}
             </div>
-            @if (remoteReleaseCheck.isNewerAvailable === false) {
+            @if (remoteReleaseCheck().isNewerAvailable === false) {
               <div class="grid-col-3 grid-row-1">Up to date</div>
             }
-            @if (remoteReleaseCheck.isNewerAvailable === true) {
+            @if (remoteReleaseCheck().isNewerAvailable === true) {
               <div class="grid-col-3 grid-row-1">
-                {{ remoteReleaseCheck.latestRelease?.tagName }}
+                {{ remoteReleaseCheck().latestRelease?.tagName }}
               </div>
               <div class="grid-col-3 grid-row-2">
-                {{ dateFormat(remoteReleaseCheck.latestRelease?.publishedAt) }}
+                {{ dateFormat(remoteReleaseCheck().latestRelease?.publishedAt) }}
               </div>
               <div class="grid-col-4 grid-row-1">
                 <a
-                  [href]="remoteReleaseCheck.latestRelease?.downloadUrl"
+                  [href]="remoteReleaseCheck().latestRelease?.downloadUrl"
                   target="_blank"
                   class="action-link"
                   >Download</a
@@ -220,7 +220,7 @@
               </div>
               <div class="grid-col-4 grid-row-2">
                 <a
-                  [href]="remoteReleaseCheck.latestRelease?.changelogUrl"
+                  [href]="remoteReleaseCheck().latestRelease?.changelogUrl"
                   target="_blank"
                   class="action-link"
                   >Changelog</a
@@ -229,10 +229,10 @@
             }
           </div>
           <div class="button-container vflex">
-            @if (remoteReleaseCheck.latestCheckError) {
+            @if (remoteReleaseCheck().latestCheckError) {
               <div class="error">
                 <p>Error checking updates:</p>
-                <p>{{ remoteReleaseCheck.latestCheckError }}</p>
+                <p>{{ remoteReleaseCheck().latestCheckError }}</p>
               </div>
             }
             <div class="hflex">
@@ -240,23 +240,23 @@
                 mat-raised-button
                 class="normal-button"
                 (click)="checkForLatestRelease()"
-                [disabled]="remoteReleaseCheck.isChecking">
+                [disabled]="remoteReleaseCheck().isChecking">
                 Check for newer DSOMM
               </button>
-              @if (remoteReleaseCheck.isChecking) {
+              @if (remoteReleaseCheck().isChecking) {
                 <mat-progress-spinner mode="indeterminate" diameter="20"></mat-progress-spinner>
               }
             </div>
           </div>
         </div>
-        @if (meta.activityFiles.length > 1) {
+        @if (meta()?.activityFiles && meta()!.activityFiles.length > 1) {
           <div class="version-info-customization">
             <div>
               This application uses the official DSOMM Model above, with some local customizations.
               The following files are used to describe the model in use:
             </div>
             <ul>
-              @for (file of meta.activityFiles; track file) {
+              @for (file of meta()!.activityFiles; track file) {
                 <li>
                   <a href="{{ file }}" target="_blank">{{ file.replace('assets/YAML/', '') }}</a>
                 </li>
@@ -265,10 +265,10 @@
           </div>
         }
       }
-      @if (!meta.activityMeta?.getDsommVersion()) {
+      @if (!meta()?.activityMeta?.getDsommVersion()) {
         <div>This application runs on a customized version of the DSOMM model:</div>
         <ul>
-          @for (file of meta.activityFiles; track file) {
+          @for (file of meta()?.activityFiles || []; track file) {
             <li>
               <a href="{{ file }}" target="_blank">{{ file.replace('assets/YAML/', '') }}</a>
             </li>

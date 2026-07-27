@@ -49,8 +49,8 @@ describe('TeamsComponent', () => {
   });
 
   it('check loading teams', () => {
-    expect(component.teams).toContain('Team A');
-    expect(component.teams).toContain('Team B');
-    expect(component.teamGroups?.['AB']).toBeDefined();
+    expect(component.teams()).toContain('Team A');
+    expect(component.teams()).toContain('Team B');
+    expect(component.teamGroups()?.['AB']).toBeDefined();
   });
 });

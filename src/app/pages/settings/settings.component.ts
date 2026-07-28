@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -9,7 +9,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { SettingsService } from '../../service/settings/settings.service';
-import { GithubService, GithubReleaseInfo } from 'src/app/service/settings/github.service';
+import { GithubService } from 'src/app/service/settings/github.service';
 import { LoaderService } from 'src/app/service/loader/data-loader.service';
 import { DataStore } from 'src/app/model/data-store';
 import { ProgressDefinitions } from 'src/app/model/types';
@@ -82,22 +82,22 @@ export class SettingsComponent implements OnInit {
   modal = inject(ModalMessageComponent);
   private githubService = inject(GithubService);
 
-  meta!: MetaStore;
+  meta = signal<MetaStore | null>(null);
   progressStore!: ProgressStore;
-  dataStoreMaxLevel!: number;
-  selectedMaxLevel!: number;
-  selectedMaxLevelCaption: String = '';
+  dataStoreMaxLevel = signal(5);
+  selectedMaxLevel = signal(5);
+  selectedMaxLevelCaption = signal('');
   progressDefinitionsForm!: FormGroup<{
     definitions: FormArray<FormGroup<ProgressDefinitionForm>>;
   }>;
   tempProgressDefinitions: ProgressDefinitions = {};
-  editingProgressDefinitions: boolean = false;
-  remoteReleaseCheck: RemoteReleaseCheck = {
+  editingProgressDefinitions = signal(false);
+  remoteReleaseCheck = signal<RemoteReleaseCheck>({
     isChecking: false,
     isNewerAvailable: null,
     latestRelease: null,
     latestCheckError: null,
-  };
+  });
 
   private BROWSER_LOCALE = 'BROWSER';
   dateFormats = [
@@ -110,15 +110,7 @@ export class SettingsComponent implements OnInit {
     { value: 'ja' },
     { value: 'hu' },
   ];
-  selectedDateFormat: string = this.BROWSER_LOCALE;
-
-  // GitHub release check state
-  checkingLatest: boolean = false;
-  latestReleaseInfo: GithubReleaseInfo | null = null;
-  latestCheckError: string | null = null;
-  isNewerAvailable: boolean | null = null;
-  latestDownloadUrl: string | null = null;
-  latestReleasePublishedDate: Date | null = null;
+  selectedDateFormat = signal(this.BROWSER_LOCALE);
 
   ngOnInit(): void {
     this.initialize();
@@ -138,36 +130,47 @@ export class SettingsComponent implements OnInit {
   }
 
   async checkForLatestRelease(): Promise<void> {
-    this.remoteReleaseCheck.isChecking = true;
-    this.remoteReleaseCheck.isNewerAvailable = null;
-    this.remoteReleaseCheck.latestRelease = null;
-    this.remoteReleaseCheck.latestCheckError = null;
+    this.remoteReleaseCheck.update(state => ({
+      ...state,
+      isChecking: true,
+      isNewerAvailable: null,
+      latestRelease: null,
+      latestCheckError: null,
+    }));
 
+    let latestRelease: RemoteReleaseInfo | null = null;
     try {
-      this.remoteReleaseCheck.latestRelease = await this.githubService.getLatestRelease();
+      latestRelease = await this.githubService.getLatestRelease();
     } catch (err: any) {
       console.warn('Error checking latest DSOMM release', err);
-      this.remoteReleaseCheck.latestCheckError = err?.message || 'Failed to check latest release';
+      this.remoteReleaseCheck.update(state => ({
+        ...state,
+        isChecking: false,
+        latestCheckError: err?.message || 'Failed to check latest release',
+      }));
       return;
-    } finally {
-      this.remoteReleaseCheck.isChecking = false;
     }
 
-    if (!this.remoteReleaseCheck.latestRelease) {
-      this.remoteReleaseCheck.latestCheckError =
-        'Error: No release information received from Github';
+    if (!latestRelease) {
+      this.remoteReleaseCheck.update(state => ({
+        ...state,
+        isChecking: false,
+        latestCheckError: 'Error: No release information received from Github',
+      }));
     } else {
-      const remote = this.remoteReleaseCheck.latestRelease;
+      const remote = latestRelease;
+      const meta = this.meta();
 
       const remoteTag = (remote && remote.tagName?.replace(/^v/, '')) || '';
-      const localTag = this.meta?.activityMeta?.getDsommVersion()?.replace(/^v/, '') || '';
+      const localTag = meta?.activityMeta?.getDsommVersion()?.replace(/^v/, '') || '';
 
       const remoteDate =
         remote && remote.publishedAt && new Date(remote.publishedAt.toDateString());
-      const localDate = this.meta?.activityMeta?.getDsommReleaseDate();
+      const localDate = meta?.activityMeta?.getDsommReleaseDate();
 
       // Prefer version tag comparison, fallback to published date comparison
       let newer = false;
+      let checkError: string | null = null;
       if (remoteTag && localTag && remoteDate && localDate) {
         newer = remoteTag !== localTag || remoteDate > localDate;
       } else {
@@ -179,15 +182,20 @@ export class SettingsComponent implements OnInit {
         if (!localTag) tmp.push('local model version');
         if (!remoteDate) tmp.push('DSOMM model date');
         if (!localDate) tmp.push('local model date');
-        this.remoteReleaseCheck.latestCheckError = `Could not determine ${tmp.join(', ')}`; // eslint-disable-line
-        console.warn('ERROR: ' + this.remoteReleaseCheck.latestCheckError);
+        checkError = `Could not determine ${tmp.join(', ')}`; // eslint-disable-line
+        console.warn('ERROR: ' + checkError);
       }
-      this.remoteReleaseCheck.isNewerAvailable = newer;
+      this.remoteReleaseCheck.set({
+        isChecking: false,
+        isNewerAvailable: newer,
+        latestRelease: remote,
+        latestCheckError: checkError,
+      });
     }
   }
 
   initialize(): void {
-    this.selectedDateFormat = this.settings.getDateFormat() || this.BROWSER_LOCALE;
+    this.selectedDateFormat.set(this.settings.getDateFormat() || this.BROWSER_LOCALE);
 
     // Init dates
     let date: Date = new Date();
@@ -202,8 +210,8 @@ export class SettingsComponent implements OnInit {
   }
 
   setYamlData(dataStore: DataStore): void {
-    this.dataStoreMaxLevel = dataStore.getMaxLevel();
-    this.selectedMaxLevel = this.settings.getMaxLevel() || this.dataStoreMaxLevel;
+    this.dataStoreMaxLevel.set(dataStore.getMaxLevel());
+    this.selectedMaxLevel.set(this.settings.getMaxLevel() || this.dataStoreMaxLevel());
     this.updateMaxLevelCaption();
 
     if (dataStore.progressStore) {
@@ -212,34 +220,38 @@ export class SettingsComponent implements OnInit {
 
     // Load progress definitions
     if (dataStore.meta) {
-      this.meta = dataStore.meta;
-      this.tempProgressDefinitions = deepCopy(this.meta.progressDefinition);
+      this.meta.set(dataStore.meta);
+      this.tempProgressDefinitions = deepCopy(dataStore.meta.progressDefinition);
     }
   }
 
   onDateFormatChange(): void {
-    let value: any = this.selectedDateFormat == 'null' ? null : this.selectedDateFormat;
+    const fmt = this.selectedDateFormat();
+    let value: any = fmt == 'null' ? null : fmt;
     this.settings.setDateFormat(value);
   }
 
   onMaxLevelChange(value: number | null): void {
-    if (value == null) value = this.dataStoreMaxLevel;
-    if (value == this.dataStoreMaxLevel) {
+    const maxLevel = this.dataStoreMaxLevel();
+    if (value == null) value = maxLevel;
+    if (value == maxLevel) {
       this.settings.setMaxLevel(null);
     } else {
       this.settings.setMaxLevel(value);
     }
-    this.selectedMaxLevel = value;
+    this.selectedMaxLevel.set(value);
     this.updateMaxLevelCaption();
   }
 
   // === Max Level ===
   updateMaxLevelCaption(): void {
-    if (this.selectedMaxLevel == this.dataStoreMaxLevel) {
-      this.selectedMaxLevelCaption = 'All maturity levels';
+    const level = this.selectedMaxLevel();
+    const maxLevel = this.dataStoreMaxLevel();
+    if (level == maxLevel) {
+      this.selectedMaxLevelCaption.set('All maturity levels');
     } else {
-      if (this.selectedMaxLevel == 1) this.selectedMaxLevelCaption = `Maturity level 1 only`;
-      else this.selectedMaxLevelCaption = `Maturity levels 1-${this.selectedMaxLevel} only`;
+      if (level == 1) this.selectedMaxLevelCaption.set('Maturity level 1 only');
+      else this.selectedMaxLevelCaption.set(`Maturity levels 1-${level} only`);
     }
   }
 
@@ -356,7 +368,7 @@ export class SettingsComponent implements OnInit {
     this.tempProgressDefinitions = this.sortObjectByScore(newProgressDefinitions);
 
     // Save the new progress definitions to MetaStore and localStorage
-    this.meta.saveProgressDefinition(this.tempProgressDefinitions);
+    this.meta()!.saveProgressDefinition(this.tempProgressDefinitions);
 
     // Reinitialize the ProgressStore with the new definitions
     this.progressStore.init(this.tempProgressDefinitions);
@@ -364,18 +376,18 @@ export class SettingsComponent implements OnInit {
     // Save progress data to localStorage
     this.progressStore.saveToLocalStorage();
 
-    this.editingProgressDefinitions = false;
+    this.editingProgressDefinitions.set(false);
     this.updateProgressDefinitionsForm();
   }
 
   resetProgressDefinitions(): void {
-    this.tempProgressDefinitions = deepCopy(this.meta.progressDefinition);
-    this.editingProgressDefinitions = false;
+    this.tempProgressDefinitions = deepCopy(this.meta()!.progressDefinition);
+    this.editingProgressDefinitions.set(false);
     this.updateProgressDefinitionsForm();
   }
 
   toggleProgressDefinitionsEdit(): void {
-    this.editingProgressDefinitions = !this.editingProgressDefinitions;
+    this.editingProgressDefinitions.update(v => !v);
   }
 
   getFormGroupValue(control: AbstractControl, field: string): any {

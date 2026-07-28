@@ -637,9 +637,54 @@ Each component toggle below documents a single commit.
 
 </details>
 
+<details>
 
+<summary><strong>CircularHeatmapComponent</strong> (<a href="https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/d7abc966">d7abc966</a>)</summary>
 
-  
+- Full signal migration: `filtersTeams`, `filtersTeamGroups`, `teamGroups`, `allSectors`, `selectedSector`, `showOverlay`, `showFilters`, `showActivityCard`, `showActivityDetails`, and `dataStore` converted from plain properties to `signal()`.
+- `hasTeamsFilter` derived as `computed()` from `filtersTeams` (no manual bookkeeping)
+- Replaced `ngOnInit` + `requestAnimationFrame` hack with `afterNextRender` (Angular 17+ DOM-ready API).
+- Replaced `themeService.theme$` RxJS subscription with an `effect()` tracking the `ThemeService.theme` signal for reactive heatmap repaint.
+- Dissolved `destroy$` Subject / `takeUntil` / `OnDestroy`: teardown handled by `DestroyRef` (`destroyRef.onDestroy()` and `takeUntilDestroyed()`).
+- Extracted `readThemeColors()` helper to DRY up CSS custom property reads (previously duplicated in init and theme subscriber).
+- Group chip filter switched from listbox-level `(change)` to per-chip `(selectionChange)` with `MatChipSelectionChange` — prevents deselection of the active group chip via a three-tier guard (`isUserInput` check → programmatic deselection ignore → already-active check).
+- **Bug fix:** Replaced `equalArray()` with set-based comparison for group highlight, fixing order-sensitive mismatch between chip/DOM order and YAML declaration order.
+- **Bug fix:** All filter mutations now create new object references via `.set()`, fixing the `keyvalue` pipe caching bug that caused group-selected teams to be silently dropped on subsequent single-chip clicks.
+- **Bug fix:** Group chip deselection no longer leaves stale team selections — the per-chip `(selectionChange)` handler prevents visual deselection entirely.
+- D3 click/hover handlers updated to use `signal.set()` for `selectedSector`, `showActivityCard`.
+- Template updated: all signal properties called with `()` in bindings.
+- **Files:** `circular-heatmap.component.ts`, `circular-heatmap.component.html`
+
+</details>
+
+<details>
+
+<summary><strong>MappingComponent, SettingsComponent & TeamsComponent</strong> (<a href="https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/d0089a97">d0089a97</a>)</summary>
+
+**MappingComponent**
+- `allTeams`, `dataStore`, and `searchTerms` converted from plain properties to `signal()`.
+- Search-term chip handlers (`removeSearchTerm`, `clearFilter`) and `onSearchKeydown` now use `.update()` / `.set()` instead of direct array mutation.
+- `setYamlData()` writes `dataStore` and `allTeams` via `.set()`.
+- Template updated: `searchTerms()`, `allTeams()`, `dataStore()` called as functions, including the optional-chained `dataStore().progressStore?.getTeamActivityTitle(...)`.
+
+**SettingsComponent**
+- `meta`, `dataStoreMaxLevel`, `selectedMaxLevel`, `selectedMaxLevelCaption`, `editingProgressDefinitions`, `remoteReleaseCheck`, and `selectedDateFormat` converted to `signal()`.
+- Removed unused `GithubReleaseInfo` import and dead `checkingLatest` / `latestReleaseInfo` / `latestCheckError` / `isNewerAvailable` / `latestDownloadUrl` / `latestReleasePublishedDate` fields. These were leftover state never wired to the template, superseded by `remoteReleaseCheck`.
+- `checkForLatestRelease()` rewritten to build the release-check result via local variables (`latestRelease`, `checkError`) and commit them in a single `.update()`/`.set()` call per branch, instead of mutating individual `remoteReleaseCheck` fields in place across try/catch/finally.
+- `onMaxLevelChange`, `updateMaxLevelCaption`, `toggleProgressDefinitionsEdit`, `saveProgressDefinitions`, `resetProgressDefinitions` updated to read/write via signal `()`/`.set()`/`.update()`.
+- Template updated: all signal properties called with `()`, including `meta()?.activityMeta?.getDsommVersion()` and `remoteReleaseCheck().latestRelease?.tagName`-style chains.
+- Spec updated: `component.meta.set({...})` and `component.selectedMaxLevel()` assertions.
+
+**TeamsComponent**
+- `dataStore`, `canEdit`, `teams`, `teamGroups`, `progressTitleImplemented`, `infoTitle`, `infoTeams`, `info`, `allColumnNames`, and `progressColumnNames` converted to `signal()`.
+- `onSelectionChanged` and `onTeamsChanged` reworked to derive a new `info`/`currentInfo` object and commit it via `.set()`, rather than mutating the existing record in place (avoids the same stale-reference class of bug fixed in the heatmap migration).
+- `setYamlData()`, `updateColumnNames()`, `onExportTeamGroups()`, `onResetTeamGroups()`, `makeTeamSummary()` updated to read signals via `()`.
+- Template updated: `teams()`, `teamGroups()`, `canEdit()`, `dataStore()`, `infoTitle()`, `infoTeams()`, `info()`, `allColumnNames()`, `progressColumnNames()` called as functions throughout.
+- Spec updated: `component.teams()`, `component.teamGroups()` assertions.
+
+- **Files:** `mapping.component.ts`, `mapping.component.html`, `settings.component.ts`, `settings.component.html`, `settings.component.spec.ts`, `teams.component.ts`, `teams.component.html`, `teams.component.spec.ts` (8 files)
+
+</details>
 
 ---
 
@@ -648,7 +693,7 @@ Each component toggle below documents a single commit.
 | # | Area | Issue | Priority | Notes |
 |---|-----------|-------|----------|-------|
 | 1 | `xlsx` (SheetJS) dependency | Prototype pollution + ReDoS vulnerability, no upstream fix available (maintainers stopped publishing security patches) | Medium | Requires code changes wherever `xlsx` is imported for spreadsheet export. Options: replace with `exceljs` or `xlsx-js-style` (community fork), or accept risk if only used for non-sensitive data export. <b>Needs a dedicated PR.</b> |
-| 2 | `CircularHeatmapComponent` | • **Order-sensitive group highlight:** `equalArray` compares chip/DOM order against YAML declaration order — mismatched order prevents highlighting. Fix: set-based comparison. <br>• **Group selection wipe:** `toggleTeamGroupFilter` mutates `filtersTeams` in place, but `keyvalue` pipe caches on object reference — a subsequent single-chip click drops group-selected teams. Fix: signal-based state. <br>• **Stale group deselection:** Deselecting a group chip visually deselects it but doesn't clear the underlying team selection. <br>• **Layout shift on scroll:** Heatmap shifts vertically at certain viewport widths. | High | All issues will be fixed in one upcoming PR — migrating `CircularHeatmapComponent` to Signals (as `MatrixComponent` already does). |
+| 2 | `CircularHeatmapComponent` | • **Layout shift on scroll:** Heatmap shifts vertically at certain viewport widths. | Low | Remaining issue after signal migration. The three chip/filter bugs (order-sensitive group highlight, group selection wipe, stale group deselection) were resolved in the `CircularHeatmapComponent` signal migration. |
 | 3 | Logging | Replace `console.log()` and boolean `environment.production` checks with a proper logging library using log-level feature toggles. Preferred Library: [Winston](https://github.com/winstonjs/winston). | Low | Discussed in team meeting. |
 | 4 | Test Runner | • **Deprecated subdependencies:** Karma pulls in `glob@7.2.3`, `inflight@1.0.6`, and `rimraf@3.0.2` — all deprecated, cluttering `pnpm install` with warnings. <br>• **pnpm incompatibility:** Karma's Webpack-based builder (`@angular-devkit/build-angular:karma`) cannot resolve transitive dependencies (e.g. `@babel/runtime`) under pnpm's strict symlinked `node_modules`. Currently requires `node-linker=hoisted` in `.npmrc` as a workaround, defeating pnpm's strictness benefits. <br>• **Modern tooling alignment:** Build/serve already use esbuild/Vite via `@angular/build`. Tests are the last piece still on the legacy Webpack pipeline. Migrating would allow dropping `@angular-devkit/build-angular` entirely. | High | Karma is deprecated. Migrate to a Vite-based test runner (e.g. Vitest or `@angular/build` native test support). |
 

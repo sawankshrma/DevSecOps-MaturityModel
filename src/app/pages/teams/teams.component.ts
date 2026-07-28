@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, ViewChild, inject } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { sum } from 'd3';
@@ -48,20 +48,20 @@ export class TeamsComponent implements OnInit, AfterViewInit {
   modal = inject(ModalMessageComponent);
 
   dateStr = dateStr;
-  dataStore: DataStore = new DataStore();
-  canEdit: boolean = true;
-  teams: TeamNames = [];
-  teamGroups: TeamGroups = {};
-  progressTitleImplemented: string = 'Implemented';
+  dataStore = signal<DataStore>(new DataStore());
+  canEdit = signal(true);
+  teams = signal<TeamNames>([]);
+  teamGroups = signal<TeamGroups>({});
+  progressTitleImplemented = signal('Implemented');
 
   // Info panel showing KPIs for teams and groups
-  infoTitle: string = '';
-  infoTeams: TeamNames = [];
-  info: Partial<Record<string, TeamSummary>> = {};
+  infoTitle = signal('');
+  infoTeams = signal<TeamNames>([]);
+  info = signal<Partial<Record<string, TeamSummary>>>({});
 
   dataSource: MatTableDataSource<TeamSummaryActivityProgress> = new MatTableDataSource<TeamSummaryActivityProgress>([]); // eslint-disable-line
-  allColumnNames: string[] = [];
-  progressColumnNames: string[] = [];
+  allColumnNames = signal<string[]>([]);
+  progressColumnNames = signal<string[]>([]);
   @ViewChild(MatSort, { static: false }) sort!: MatSort;
 
   ngOnInit(): void {
@@ -98,7 +98,7 @@ export class TeamsComponent implements OnInit, AfterViewInit {
           return item.activity?.dimension || '';
         }
         // For progress columns, sort by date string or timestamp
-        if (this.progressColumnNames.includes(property)) {
+        if (this.progressColumnNames().includes(property)) {
           // If your progress is a date string, you may want to convert to Date for proper sorting
           const value = item.progress?.[property];
           return value ? new Date(value).getTime() : 0;
@@ -109,17 +109,17 @@ export class TeamsComponent implements OnInit, AfterViewInit {
   }
 
   setYamlData(dataStore: DataStore) {
-    this.dataStore = dataStore;
-    if (this.dataStore.meta) {
-      this.canEdit = this.dataStore.meta.allowChangeTeamNameInBrowser;
+    this.dataStore.set(dataStore);
+    if (dataStore.meta) {
+      this.canEdit.set(dataStore.meta.allowChangeTeamNameInBrowser);
     }
 
-    this.teams = dataStore?.meta?.teams || [];
-    this.teamGroups = dataStore?.meta?.teamGroups || {};
+    this.teams.set(dataStore?.meta?.teams || []);
+    this.teamGroups.set(dataStore?.meta?.teamGroups || {});
 
-    let progressStore: ProgressStore | null = this.dataStore?.progressStore;
-    this.progressColumnNames = progressStore?.getInProgressTitles() || [];
-    this.progressTitleImplemented = progressStore?.getCompletedProgressTitle() || 'Implemented';
+    let progressStore: ProgressStore | null = dataStore?.progressStore;
+    this.progressColumnNames.set(progressStore?.getInProgressTitles() || []);
+    this.progressTitleImplemented.set(progressStore?.getCompletedProgressTitle() || 'Implemented');
     this.updateColumnNames();
   }
 
@@ -130,47 +130,65 @@ export class TeamsComponent implements OnInit, AfterViewInit {
   onSelectionChanged(event: SelectionChangedEvent) {
     console.log(`${perfNow()}: Selection changed: ${JSON.stringify(event)}`);
     if (event.selectedTeam) {
-      this.infoTitle = event.selectedTeam;
-      this.infoTeams = [event.selectedTeam];
+      this.infoTitle.set(event.selectedTeam);
+      this.infoTeams.set([event.selectedTeam]);
     } else if (event.selectedGroup) {
-      this.infoTitle = event.selectedGroup;
-      this.infoTeams = this.teamGroups[event.selectedGroup] || [];
+      this.infoTitle.set(event.selectedGroup);
+      this.infoTeams.set(this.teamGroups()[event.selectedGroup] || []);
     }
 
-    if (!this.info[this.infoTitle]) {
-      this.info[this.infoTitle] = this.makeTeamSummary(this.infoTitle, this.infoTeams);
+    const title = this.infoTitle();
+    const teams = this.infoTeams();
+    const currentInfo = this.info();
+    if (!currentInfo[title]) {
+      this.info.set({ ...currentInfo, [title]: this.makeTeamSummary(title, teams) });
     }
-    this.dataSource.data = this?.info[this.infoTitle]?.activitiesInProgress || [];
+    this.dataSource.data = this.info()[title]?.activitiesInProgress || [];
     this.updateColumnNames();
   }
 
   updateColumnNames() {
-    const baseColumns = this.infoTeams.length > 1 ? ['Team'] : [];
-    this.allColumnNames = [...baseColumns, 'SubDimension', 'Activity', ...this.progressColumnNames];
+    const baseColumns = this.infoTeams().length > 1 ? ['Team'] : [];
+    this.allColumnNames.set([
+      ...baseColumns,
+      'SubDimension',
+      'Activity',
+      ...this.progressColumnNames(),
+    ]);
   }
 
   onTeamsChanged(event: TeamsGroupsChangedEvent) {
     console.log(`${perfNow()}: Saving teams: ${JSON.stringify(event.teams)}`);
     console.log(`${perfNow()}: Saving groups: ${JSON.stringify(event.teamGroups)}`);
-    this.dataStore?.meta?.updateTeamsAndGroups(event.teams, event.teamGroups);
+    const ds = this.dataStore();
+    ds?.meta?.updateTeamsAndGroups(event.teams, event.teamGroups);
     if (!isEmptyObj(event.teamsRenamed)) {
       for (let oldName in event.teamsRenamed) {
-        this.dataStore?.progressStore?.renameTeam(oldName, event.teamsRenamed[oldName]);
-        delete this.info?.[oldName];
-        delete this.info?.[event.teamsRenamed[oldName]];
+        ds?.progressStore?.renameTeam(oldName, event.teamsRenamed[oldName]);
       }
-      this.dataStore?.progressStore?.saveToLocalStorage();
+      ds?.progressStore?.saveToLocalStorage();
     }
-    this.info[this.infoTitle] = this.makeTeamSummary(this.infoTitle, this.infoTeams);
-    this.dataSource.data = this?.info[this.infoTitle]?.activitiesInProgress || [];
 
-    this.setYamlData(this.dataStore);
+    const title = this.infoTitle();
+    const teams = this.infoTeams();
+    const currentInfo = { ...this.info() };
+    if (!isEmptyObj(event.teamsRenamed)) {
+      for (let oldName in event.teamsRenamed) {
+        delete currentInfo[oldName];
+        delete currentInfo[event.teamsRenamed[oldName]];
+      }
+    }
+    currentInfo[title] = this.makeTeamSummary(title, teams);
+    this.info.set(currentInfo);
+    this.dataSource.data = currentInfo[title]?.activitiesInProgress || [];
+
+    this.setYamlData(ds);
     this.updateColumnNames();
   }
 
   onExportTeamGroups() {
     console.log(`${perfNow()}: Exporting teams and groups`);
-    const yamlStr: string | undefined = this?.dataStore?.meta?.asStorableYamlString();
+    const yamlStr: string | undefined = this.dataStore()?.meta?.asStorableYamlString();
 
     if (!yamlStr) {
       this.displayMessage(
@@ -186,7 +204,7 @@ export class TeamsComponent implements OnInit, AfterViewInit {
     let buttonClicked: string = await this.displayDeleteBrowserTeamsDialog();
 
     if (buttonClicked === 'Delete') {
-      this.dataStore?.meta?.deleteTeamsAndGroups();
+      this.dataStore()?.meta?.deleteTeamsAndGroups();
       location.reload(); // Make sure all load routines are initialized
     }
   }
@@ -209,9 +227,9 @@ export class TeamsComponent implements OnInit, AfterViewInit {
 
   makeTeamSummary(name: string, teams: TeamNames): TeamSummary {
     /* eslint-disable */
-    let activitiesStarted: progressStoreMapping[] = this.dataStore?.progressStore?.getActivitiesStartedForTeams(teams) || [];
-    let activitiesInProgress: progressStoreMapping[] = this.dataStore?.progressStore?.getActivitiesInProgressForTeams(teams) || [];
-    let activitiesCompleted: progressStoreMapping[] = this.dataStore?.progressStore?.getActivitiesCompletedForTeams(teams) || [];
+    let activitiesStarted: progressStoreMapping[] = this.dataStore()?.progressStore?.getActivitiesStartedForTeams(teams) || [];
+    let activitiesInProgress: progressStoreMapping[] = this.dataStore()?.progressStore?.getActivitiesInProgressForTeams(teams) || [];
+    let activitiesCompleted: progressStoreMapping[] = this.dataStore()?.progressStore?.getActivitiesCompletedForTeams(teams) || [];
 
     let summary: TeamSummary = {
       teams,
@@ -242,7 +260,7 @@ export class TeamsComponent implements OnInit, AfterViewInit {
     return {
       team: input.team,
       activity:
-        this.dataStore?.activityStore?.getActivityByUuid(input.activityUuid) || ({} as Activity),
+        this.dataStore()?.activityStore?.getActivityByUuid(input.activityUuid) || ({} as Activity),
       progress: input.progress,
       lastUpdated: Object.values(input.progress).reduce((max, current) =>
         current > max ? current : max

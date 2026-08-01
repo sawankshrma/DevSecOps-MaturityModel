@@ -1,5 +1,5 @@
 import { HttpClient, HttpHandler } from '@angular/common/http';
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -73,7 +73,7 @@ describe('SettingsComponent', () => {
     }).compileComponents();
   });
 
-  beforeEach(fakeAsync(() => {
+  beforeEach(async () => {
     fixture = TestBed.createComponent(SettingsComponent);
     component = fixture.componentInstance;
     component.meta.set({
@@ -84,27 +84,27 @@ describe('SettingsComponent', () => {
     } as any);
 
     fixture.detectChanges();
-    tick();
+    await fixture.whenStable();
     fixture.detectChanges();
-  }));
+  });
 
-  it('should create', fakeAsync(() => {
+  it('should create', () => {
     expect(component).toBeTruthy();
-  }));
+  });
 
-  it('should update max level settings correctly', fakeAsync(() => {
+  it('should update max level settings correctly', () => {
     component.onMaxLevelChange(3);
 
     expect(component.selectedMaxLevel()).toBe(3);
     expect(settingsService.setMaxLevel).toHaveBeenCalledWith(3);
-  }));
+  });
 
-  it('should handle max level reset to default', fakeAsync(() => {
+  it('should handle max level reset to default', () => {
     component.onMaxLevelChange(5);
 
     expect(component.selectedMaxLevel()).toBe(5);
 
     // Remove localStorage when settings' maxLevel is set to activity's maxLevel
     expect(settingsService.setMaxLevel).toHaveBeenCalledWith(null);
-  }));
+  });
 });

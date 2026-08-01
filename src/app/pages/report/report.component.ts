@@ -72,7 +72,7 @@ export class ReportComponent implements OnInit {
 
   reportConfig = signal<ReportConfig>(getReportConfig());
   allActivities = signal<Activity[]>([]);
-  isLoading: boolean = true;
+  readonly isLoading = signal(true);
 
   // For the config modal
   allDimensionNames: string[] = [];
@@ -191,12 +191,12 @@ export class ReportComponent implements OnInit {
   }
 
   loadActivities(): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.loader
       .load()
       .then((dataStore: DataStore) => {
         if (!dataStore.activityStore) {
-          this.isLoading = false;
+          this.isLoading.set(false);
           return;
         }
 
@@ -231,11 +231,11 @@ export class ReportComponent implements OnInit {
         }
 
         this.allActivities.set(activities);
-        this.isLoading = false;
+        this.isLoading.set(false);
       })
       .catch(err => {
         console.error('Error loading activities for report:', err);
-        this.isLoading = false;
+        this.isLoading.set(false);
       });
   }
 

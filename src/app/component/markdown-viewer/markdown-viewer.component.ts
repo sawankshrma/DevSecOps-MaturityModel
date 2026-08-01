@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import md from 'markdown-it';
 import { HttpClient } from '@angular/common/http';
 
@@ -16,7 +16,7 @@ export class MarkdownViewerComponent implements OnInit {
     html: true,
   });
   markdownURI: any;
-  toRender: string = '';
+  readonly toRender = signal('');
 
   ngOnInit(): void {
     this.loadMarkdownFiles(this.MDFile);
@@ -25,10 +25,10 @@ export class MarkdownViewerComponent implements OnInit {
   async loadMarkdownFiles(MDFile: string): Promise<boolean> {
     try {
       this.markdownURI = await this.http.get(MDFile, { responseType: 'text' }).toPromise();
-      this.toRender = this.markdown.render(this.markdownURI);
+      this.toRender.set(this.markdown.render(this.markdownURI));
       return true;
     } catch {
-      this.toRender = 'Markdown file could not be found';
+      this.toRender.set('Markdown file could not be found');
       return false;
     }
   }

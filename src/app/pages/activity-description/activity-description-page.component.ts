@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoaderService } from '../../service/loader/data-loader.service';
 import { Activity, ActivityStore } from '../../model/activity-store';
@@ -23,7 +23,7 @@ export class ActivityDescriptionPageComponent implements OnInit {
   modal = inject(ModalMessageComponent);
 
   currentActivity: Activity | null = null;
-  isLoading: boolean = true;
+  readonly isLoading = signal(true);
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -34,7 +34,7 @@ export class ActivityDescriptionPageComponent implements OnInit {
   }
 
   loadActivity(uuid?: string, name?: string) {
-    this.isLoading = true;
+    this.isLoading.set(true);
 
     this.loader
       .load()
@@ -51,11 +51,11 @@ export class ActivityDescriptionPageComponent implements OnInit {
         }
 
         this.currentActivity = activity;
-        this.isLoading = false;
+        this.isLoading.set(false);
       })
       .catch(err => {
         console.error('Error loading activity data:', err);
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.displayMessage(
           new DialogInfo(err.message || 'Failed to load activity', 'An error occurred')
         );

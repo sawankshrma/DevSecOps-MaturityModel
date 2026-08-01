@@ -686,6 +686,19 @@ Each component toggle below documents a single commit.
 
 </details>
 
+<details>
+
+<summary><strong>Zoneless application and tests</strong></summary>
+
+- The application now uses `provideZonelessChangeDetection()` instead of `provideZoneChangeDetection()`.
+- Removed `zone.js` from the application dependencies and from the build/test polyfills, including the `zone.js/testing` test bootstrap import.
+- Replaced the remaining Zone-dependent `fakeAsync` / `tick` test setup with native `async` / `await fixture.whenStable()`.
+- Migrated the remaining loading and rendered-content state in `ActivityDescriptionPageComponent`, `ReportComponent`, `UsageComponent`, and `MarkdownViewerComponent` to signals so their templates update correctly without Zone.js.
+- <b> DSOMM is now completely zoneless at runtime and in its test configuration 🎉. </b>
+- **Files:** `angular.json`, `package.json`, `package-lock.json`, `src/main.ts`, `src/test.ts`, `src/app/pages/settings/settings.component.spec.ts`, `src/app/component/markdown-viewer/*`, `src/app/pages/activity-description/*`, `src/app/pages/report/*`, `src/app/pages/usage/*`
+
+</details>
+
 ---
 
 ## Backlog

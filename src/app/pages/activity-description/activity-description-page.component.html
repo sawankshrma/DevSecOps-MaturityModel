@@ -1,11 +1,11 @@
 <div class="page-container">
-  @if (isLoading) {
+  @if (isLoading()) {
     <div class="loading-container">
       <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
     </div>
   }
 
-  @if (currentActivity && !isLoading) {
+  @if (currentActivity && !isLoading()) {
     <app-activity-description
       [activity]="currentActivity"
       [showCloseButton]="false"

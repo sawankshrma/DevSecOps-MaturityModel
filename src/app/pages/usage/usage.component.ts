@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { perfNow } from 'src/app/util/util';
 import { MarkdownViewerComponent } from '../../component/markdown-viewer/markdown-viewer.component';
@@ -13,7 +13,7 @@ import { TopHeaderComponent } from '../../component/top-header/top-header.compon
 export class UsageComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
-  page: string = 'USAGE';
+  readonly page = signal('USAGE');
 
   ngOnInit() {
     if (this.route && this.route.params) {
@@ -21,7 +21,7 @@ export class UsageComponent implements OnInit {
         let page = params['page'];
         // CWE-79 - sanitize input
         if (page && page.match(/^[\w.-]+$/)) {
-          this.page = page;
+          this.page.set(page);
         }
       });
     }

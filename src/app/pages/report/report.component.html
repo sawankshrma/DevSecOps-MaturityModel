@@ -10,7 +10,7 @@
       <mat-icon>print</mat-icon>
       Print
     </button>
-    @if (!isLoading) {
+    @if (!isLoading()) {
       <span class="activity-count">
         {{ totalFilteredActivities() }} activities
         @if (reportConfig().selectedTeams.length > 0) {
@@ -29,13 +29,13 @@
     </app-team-selector>
   </div>
 
-  @if (isLoading) {
+  @if (isLoading()) {
     <div class="loading-container">
       <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
     </div>
   }
 
-  @if (!isLoading && filteredDimensions().length === 0) {
+  @if (!isLoading() && filteredDimensions().length === 0) {
     <div class="empty-state">
       <mat-icon>filter_list_off</mat-icon>
       <p>No activities match the current report configuration.</p>
@@ -43,7 +43,7 @@
     </div>
   }
 
-  @if (!isLoading && filteredDimensions().length > 0) {
+  @if (!isLoading() && filteredDimensions().length > 0) {
     <div class="report-body">
       <!-- Overview Section -->
       <section class="overview-section">

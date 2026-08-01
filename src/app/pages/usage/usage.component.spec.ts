@@ -27,7 +27,7 @@ describe('UsageComponent', () => {
     fixture.detectChanges();
 
     expect(component).toBeTruthy();
-    expect(component.page).toBe('USAGE');
+    expect(component.page()).toBe('USAGE');
   });
 
   it('should load page', () => {
@@ -39,6 +39,6 @@ describe('UsageComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    expect(component.page).toBe('test-page');
+    expect(component.page()).toBe('test-page');
   });
 });

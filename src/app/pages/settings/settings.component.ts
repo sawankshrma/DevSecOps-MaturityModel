@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -59,6 +59,7 @@ interface ProgressDefinitionForm {
   selector: 'app-settings',
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     TopHeaderComponent,
     MatCardModule,
@@ -182,7 +183,7 @@ export class SettingsComponent implements OnInit {
         if (!localTag) tmp.push('local model version');
         if (!remoteDate) tmp.push('DSOMM model date');
         if (!localDate) tmp.push('local model date');
-        checkError = `Could not determine ${tmp.join(', ')}`; // eslint-disable-line
+        checkError = `Could not determine ${tmp.join(', ')}`;
         console.warn('ERROR: ' + checkError);
       }
       this.remoteReleaseCheck.set({

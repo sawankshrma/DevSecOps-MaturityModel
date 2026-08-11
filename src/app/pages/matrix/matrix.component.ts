@@ -1,4 +1,13 @@
-import { Component, OnInit, ElementRef, ViewChild, signal, computed, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ElementRef,
+  ViewChild,
+  signal,
+  computed,
+  inject,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { Router, NavigationExtras } from '@angular/router';
@@ -27,13 +36,17 @@ export interface MatrixRow {
   level6: Activity[];
   level7: Activity[];
 }
-type LevelKey = keyof Pick<MatrixRow, 'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6' | 'level7'>;  // eslint-disable-line
+type LevelKey = keyof Pick<
+  MatrixRow,
+  'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6' | 'level7'
+>;
 
 @UntilDestroy()
 @Component({
   selector: 'app-matrix',
   templateUrl: './matrix.component.html',
   styleUrls: ['./matrix.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [
     TopHeaderComponent,
     MatChipsModule,
@@ -98,7 +111,6 @@ export class MatrixComponent implements OnInit {
     }
     return itemsStage2;
   });
-  /* eslint-enable */
 
   reset() {
     this.filtersDim.set(Object.fromEntries(Object.keys(this.filtersDim()).map(k => [k, false])));
@@ -130,9 +142,9 @@ export class MatrixComponent implements OnInit {
     const allDimensionNames = dataStore?.activityStore?.getAllDimensionNames() || [];
 
     this.MATRIX_DATA.set(this.buildMatrixData(dataStore.activityStore, allDimensionNames));
-    const levelsObj = this.buildLevels(dataStore.getLevelTitles(this.settings.getMaxLevel())); // eslint-disable-line
+    const levelsObj = this.buildLevels(dataStore.getLevelTitles(this.settings.getMaxLevel()));
     this.levels.set(levelsObj);
-    this.filtersTag.set(this.buildFiltersForTag(dataStore.activityStore.getAllActivities()));  // eslint-disable-line
+    this.filtersTag.set(this.buildFiltersForTag(dataStore.activityStore.getAllActivities()));
     this.filtersDim.set(this.buildFiltersForDim(this.MATRIX_DATA()));
     this.columnNames.set(['Category', 'Dimension', ...Object.keys(levelsObj)]);
   }
@@ -244,7 +256,9 @@ export class MatrixComponent implements OnInit {
     const navigationExtras: NavigationExtras = {
       queryParams: { uuid: uuid },
     };
-    console.log(`${perfNow()}: Matrix: Open Details: '${this.dataStore?.activityStore?.getActivityByUuid(uuid).name}'`); // eslint-disable-line
+    console.log(
+      `${perfNow()}: Matrix: Open Details: '${this.dataStore?.activityStore?.getActivityByUuid(uuid).name}'`
+    );
     this.router.navigate([this.Routing], navigationExtras);
   }
 }

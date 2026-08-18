@@ -310,7 +310,7 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
   ) {
     let _self = this;
     var imageWidth = 1200;
-    var marginAll = 5;
+    var marginAll = 0;
     var margin = {
       top: marginAll,
       right: marginAll,
@@ -318,7 +318,7 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
       left: marginAll,
     };
     var bbWidth = imageWidth - Math.max(margin.left + margin.right, margin.top + margin.bottom) * 2; // bounding box
-    var segmentLabelHeight = bbWidth * 0.0166; // Magic fudge number. to match the longest label within one sector
+    var segmentLabelHeight = 42;
     var outerRadius = bbWidth / 2 - segmentLabelHeight;
     var innerRadius = outerRadius / (maxLevel + 1);
     var segmentHeight = (outerRadius - innerRadius) / maxLevel;
@@ -460,9 +460,10 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
         // console.log(d3.selectAll(".circular-heat")["_groups"][0].length)
         var id = 1;
 
-        var segmentLabelFontSize = (segmentLabelHeight * 2) / 3;
-        var segmentLabelOffset = (segmentLabelHeight * 1) / 3;
-        var labelLineHeight = segmentLabelFontSize * 1.2;
+        var segmentLabelOffset = 7;
+        var labelLineSpacing = 1.1;
+        var labelLineHeight = (segmentLabelHeight - segmentLabelOffset) / 2;
+        var segmentLabelFontSize = labelLineHeight / labelLineSpacing;
         var labelBaseRadius =
           innerRadius + Math.ceil(data.length / numSegments) * segmentHeight + segmentLabelOffset;
         var labels = svg

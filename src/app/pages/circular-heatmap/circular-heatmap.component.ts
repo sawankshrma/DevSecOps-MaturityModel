@@ -346,7 +346,7 @@ export class CircularHeatmapComponent {
   ) {
     let _self = this;
     var imageWidth = 1200;
-    var marginAll = 5;
+    var marginAll = 0;
     var margin = {
       top: marginAll,
       right: marginAll,
@@ -354,7 +354,7 @@ export class CircularHeatmapComponent {
       left: marginAll,
     };
     var bbWidth = imageWidth - Math.max(margin.left + margin.right, margin.top + margin.bottom) * 2; // bounding box
-    var segmentLabelHeight = bbWidth * 0.0166; // Magic fudge number. to match the longest label within one sector
+    var segmentLabelHeight = 42;
     var outerRadius = bbWidth / 2 - segmentLabelHeight;
     var innerRadius = outerRadius / (maxLevel + 1);
     var segmentHeight = (outerRadius - innerRadius) / maxLevel;
@@ -504,10 +504,11 @@ export class CircularHeatmapComponent {
         // console.log(d3.selectAll(".circular-heat")["_groups"][0].length)
         var id = 1;
 
-        //Segment labels
-        var segmentLabelFontSize = (segmentLabelHeight * 2) / 3;
-        var segmentLabelOffset = (segmentLabelHeight * 1) / 3;
-        var r =
+        var segmentLabelOffset = 7;
+        var labelLineSpacing = 1.1;
+        var labelLineHeight = (segmentLabelHeight - segmentLabelOffset) / 2;
+        var segmentLabelFontSize = labelLineHeight / labelLineSpacing;
+        var labelBaseRadius =
           innerRadius + Math.ceil(data.length / numSegments) * segmentHeight + segmentLabelOffset;
         var labels = svg
           .append('g')
@@ -518,27 +519,59 @@ export class CircularHeatmapComponent {
             'translate(' + (margin.left + offset) + ',' + (margin.top + offset) + ')'
           );
 
+        function wordWrap(text: string, maxLen = 18): string[] {
+          if (text.length <= maxLen) return [text];
+          var mid = Math.floor(text.length / 2);
+          for (var d = 0; d <= mid; d++) {
+            if (text[mid + d] === ' ')
+              return [text.substring(0, mid + d), text.substring(mid + d + 1)];
+            if (mid - d >= 0 && text[mid - d] === ' ')
+              return [text.substring(0, mid - d), text.substring(mid - d + 1)];
+          }
+          return [text];
+        }
+
+        var wrappedLabels = segmentLabels.map((l: string) => wordWrap(l));
+        var hasMultiLine = wrappedLabels.some((parts: string[]) => parts.length > 1);
+        var outerLabelRadius = hasMultiLine ? labelBaseRadius + labelLineHeight : labelBaseRadius;
+
+        function arcPath(radius: number): string {
+          return 'm0 -' + radius + ' a' + radius + ' ' + radius + ' 0 1 1 -1 0';
+        }
+
+        var labelPathIds = ['segment-label-path-' + id + '-outer'];
         labels
           .append('def')
           .append('path')
-          .attr('id', 'segment-label-path-' + id)
-          .attr('d', 'm0 -' + r + ' a' + r + ' ' + r + ' 0 1 1 -1 0');
+          .attr('id', labelPathIds[0])
+          .attr('d', arcPath(outerLabelRadius));
 
-        labels
-          .selectAll('text')
-          .data(segmentLabels)
-          .enter()
-          .append('text')
-          .append('textPath')
-          .attr('text-anchor', 'middle')
-          .attr('xlink:href', '#segment-label-path-' + id)
-          .style('font-size', segmentLabelFontSize + 'px')
-          .attr('startOffset', function (d, i) {
-            return ((i + 0.5) * 100) / numSegments + '%'; // shift ½ segment to center
-          })
-          .text(function (d: any) {
-            return d;
+        if (hasMultiLine) {
+          labelPathIds.push('segment-label-path-' + id + '-inner');
+          labels
+            .append('def')
+            .append('path')
+            .attr('id', labelPathIds[1])
+            .attr('d', arcPath(labelBaseRadius));
+        }
+
+        wrappedLabels.forEach(function (parts: string[], i: number) {
+          var startOffset = ((i + 0.5) * 100) / numSegments + '%';
+          parts.forEach(function (line: string, lineIndex: number) {
+            var pathId =
+              lineIndex === 0 && parts.length > 1
+                ? labelPathIds[0]
+                : labelPathIds[hasMultiLine ? 1 : 0];
+            labels
+              .append('text')
+              .append('textPath')
+              .attr('text-anchor', 'middle')
+              .attr('xlink:href', '#' + pathId)
+              .style('font-size', segmentLabelFontSize + 'px')
+              .attr('startOffset', startOffset)
+              .text(line);
           });
+        });
         var cursors = svg
           .append('g')
           .classed('cursors', true)

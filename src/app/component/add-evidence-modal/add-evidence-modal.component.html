@@ -8,9 +8,11 @@
     (selectedTeamsChange)="onSelectedTeamsChange($event)"
     [type]="'add-evidence-config'">
   </app-team-selector>
-  <mat-error *ngIf="teamsError" class="field-error" style="padding: 0 0 8px 0"
-    >At least one team must be selected.</mat-error
-  >
+  @if (teamsError) {
+    <mat-error class="field-error" style="padding: 0 0 8px 0"
+      >At least one team must be selected.</mat-error
+    >
+  }
 
   <mat-divider></mat-divider>
 
@@ -21,16 +23,14 @@
       <mat-label>Title</mat-label>
       <input matInput [(ngModel)]="title" placeholder="e.g. Implemented SAST scanning" required />
     </mat-form-field>
-    <mat-error *ngIf="titleError" class="field-error">Title is required.</mat-error>
+    @if (titleError) {
+      <mat-error class="field-error">Title is required.</mat-error>
+    }
 
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Description</mat-label>
-      <textarea
-        matInput
-        [(ngModel)]="description"
-        rows="4"
-        placeholder="Describe the evidence in detail..."></textarea>
+      <textarea matInput [(ngModel)]="description" rows="4" placeholder="Description"></textarea>
     </mat-form-field>
+
     <mat-form-field appearance="outline">
       <mat-label>Reviewer</mat-label>
       <input matInput [(ngModel)]="reviewer" placeholder="e.g. Jane Doe" />
@@ -42,23 +42,27 @@
   <div class="config-section">
     <h3>Attachments</h3>
     <p class="config-hint">Add links to supporting documents, images, or URLs.</p>
-    <div *ngFor="let att of attachments; let i = index" class="attachment-row">
-      <mat-form-field appearance="outline" class="attachment-type">
-        <mat-label>Type</mat-label>
-        <mat-select [(ngModel)]="att.type">
-          <mat-option *ngFor="let aType of attachmentTypes" [value]="aType">
-            {{ aType }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="attachment-link">
-        <mat-label>URL</mat-label>
-        <input matInput [(ngModel)]="att.externalLink" placeholder="https://..." />
-      </mat-form-field>
-      <button mat-icon-button color="warn" (click)="removeAttachment(i)" matTooltip="Remove">
-        <mat-icon>delete</mat-icon>
-      </button>
-    </div>
+    @for (att of attachments; track att; let i = $index) {
+      <div class="attachment-row">
+        <mat-form-field appearance="outline" class="attachment-type">
+          <mat-label>Type</mat-label>
+          <mat-select [(ngModel)]="att.type">
+            @for (aType of attachmentTypes; track aType) {
+              <mat-option [value]="aType">
+                {{ aType }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="attachment-link">
+          <mat-label>URL</mat-label>
+          <input matInput [(ngModel)]="att.externalLink" placeholder="https://..." />
+        </mat-form-field>
+        <button mat-icon-button color="warn" (click)="removeAttachment(i)" matTooltip="Remove">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    }
     <button mat-stroked-button color="primary" (click)="addAttachment()">
       <mat-icon>add</mat-icon> Add Attachment
     </button>

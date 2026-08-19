@@ -1,8 +1,17 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatSort } from '@angular/material/sort';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  inject,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { FormControl } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import * as XLSX from 'xlsx';
 import { LoaderService } from 'src/app/service/loader/data-loader.service';
 import {
@@ -13,6 +22,14 @@ import { DataStore } from 'src/app/model/data-store';
 import { Uuid } from 'src/app/model/types';
 import { perfNow } from 'src/app/util/util';
 import { SettingsService } from 'src/app/service/settings/settings.service';
+import { RouterLink } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { SlicePipe } from '@angular/common';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { TopHeaderComponent } from '../../component/top-header/top-header.component';
 
 const SEPARATOR = '\x1F'; // ASCII Unit Separator
 
@@ -49,8 +66,27 @@ enum SortMode {
   selector: 'app-mapping',
   templateUrl: './mapping.component.html',
   styleUrls: ['./mapping.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [
+    TopHeaderComponent,
+    MatFormFieldModule,
+    MatChipsModule,
+    MatIconModule,
+    MatInputModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatTableModule,
+    MatSortModule,
+    RouterLink,
+    SlicePipe,
+  ],
 })
 export class MappingComponent implements OnInit, AfterViewInit {
+  private loader = inject(LoaderService);
+  private settings = inject(SettingsService);
+  modal = inject(ModalMessageComponent);
+
   allMappings: MappingRow[] = [];
   dataSource = new MatTableDataSource<MappingRow>([]);
 
@@ -58,7 +94,7 @@ export class MappingComponent implements OnInit, AfterViewInit {
   knowledgeLabels: string[] = [];
   generalLabels: string[] = [];
 
-  allTeams: string[] = [];
+  allTeams = signal<string[]>([]);
   displayedColumns: string[] = [
     'dimension',
     'subDimension',
@@ -72,16 +108,10 @@ export class MappingComponent implements OnInit, AfterViewInit {
   @ViewChild('chipInput') chipInput!: ElementRef<HTMLInputElement>;
   @ViewChild(MatSort, { static: false }) sort!: MatSort;
 
-  dataStore: DataStore = new DataStore();
+  dataStore = signal<DataStore>(new DataStore());
 
-  searchTerms: string[] = [];
+  searchTerms = signal<string[]>([]);
   searchCtrl = new FormControl('');
-
-  constructor(
-    private loader: LoaderService,
-    private settings: SettingsService,
-    public modal: ModalMessageComponent
-  ) {}
 
   ngOnInit(): void {
     console.log(`${perfNow()}: Mapping: Loading yamls...`);
@@ -118,8 +148,8 @@ export class MappingComponent implements OnInit, AfterViewInit {
   }
 
   setYamlData(dataStore: DataStore) {
-    this.dataStore = dataStore;
-    this.allTeams = dataStore.meta?.teams || [];
+    this.dataStore.set(dataStore);
+    this.allTeams.set(dataStore.meta?.teams || []);
     this.allMappings = this.transformDataStore(dataStore);
     this.dataSource.data = this.allMappings;
   }
@@ -173,31 +203,31 @@ export class MappingComponent implements OnInit, AfterViewInit {
     const input = event.target as HTMLInputElement;
     const value = input.value.trim();
     if (event.key === 'Enter' && value) {
-      if (!this.searchTerms.includes(value.toLowerCase())) {
-        this.searchTerms.push(value.toLowerCase());
+      if (!this.searchTerms().includes(value.toLowerCase())) {
+        this.searchTerms.update(terms => [...terms, value.toLowerCase()]);
         this.updateFilter();
       }
       input.value = '';
       this.searchCtrl.setValue('');
-    } else if (!value && this.searchTerms.length === 0) {
+    } else if (!value && this.searchTerms().length === 0) {
       this.dataSource.filter = '';
     }
   }
 
   removeSearchTerm(term: string) {
-    this.searchTerms = this.searchTerms.filter(t => t !== term);
+    this.searchTerms.update(terms => terms.filter(t => t !== term));
     this.updateFilter();
   }
 
   clearFilter() {
     console.log(`${perfNow()}: Mapping: Clear search filter`);
-    this.searchTerms = [];
+    this.searchTerms.set([]);
     this.dataSource.filter = '';
     this.searchCtrl.setValue('');
   }
 
   updateFilter() {
-    this.dataSource.filter = this.searchTerms.join(SEPARATOR);
+    this.dataSource.filter = this.searchTerms().join(SEPARATOR);
     console.log(
       `${perfNow()}: Mapping: Search filter: ${this.dataSource.filter?.replace(SEPARATOR, ', ')}`
     );

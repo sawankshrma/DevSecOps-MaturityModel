@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { MatSliderModule } from '@angular/material/slider';
@@ -9,8 +10,7 @@ describe('ProgressSliderComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ProgressSliderComponent],
-      imports: [FormsModule, MatSliderModule],
+      imports: [FormsModule, MatSliderModule, ProgressSliderComponent],
     }).compileComponents();
   });
 
@@ -18,27 +18,28 @@ describe('ProgressSliderComponent', () => {
     fixture = TestBed.createComponent(ProgressSliderComponent);
     component = fixture.componentInstance;
     component.steps = ['Step 1', 'Step 2', 'Step 3'];
-    fixture.detectChanges();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
   it('should initialize with the correct initial step', () => {
     component.state = 'Step 2';
-    component.ngOnInit();
+    fixture.detectChanges();
     expect(component.currentValue).toBe(1);
   });
 
   it('should emit step changes', () => {
-    spyOn(component.progressChange, 'emit');
+    fixture.detectChanges();
+    vi.spyOn(component.progressChange, 'emit');
     component.onStepChange(2);
     expect(component.progressChange.emit).toHaveBeenCalledWith('Step 3');
   });
 
   it('should display the correct step label', () => {
-    component.currentValue = 1;
+    component.state = 'Step 2';
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.step-label')?.textContent).toContain('Step 2');

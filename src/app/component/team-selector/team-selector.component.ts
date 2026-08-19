@@ -1,10 +1,17 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { TeamGroups } from '../../model/types';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-team-selector',
   templateUrl: './team-selector.component.html',
   styleUrls: ['./team-selector.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [MatButtonModule, MatMenuModule, MatIconModule, MatCheckboxModule],
 })
 export class TeamSelectorComponent {
   @Input() allTeams: string[] = [];

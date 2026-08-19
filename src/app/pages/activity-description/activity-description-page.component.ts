@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LoaderService } from '../../service/loader/data-loader.service';
 import { Activity, ActivityStore } from '../../model/activity-store';
@@ -7,22 +7,24 @@ import {
   ModalMessageComponent,
   DialogInfo,
 } from '../../component/modal-message/modal-message.component';
+import { ActivityDescriptionComponent } from '../../component/activity-description/activity-description.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-activity-description-page',
   templateUrl: './activity-description-page.component.html',
   styleUrls: ['./activity-description-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [MatProgressSpinnerModule, ActivityDescriptionComponent],
 })
 export class ActivityDescriptionPageComponent implements OnInit {
-  currentActivity: Activity | null = null;
-  isLoading: boolean = true;
+  private route = inject(ActivatedRoute);
+  private loader = inject(LoaderService);
+  private router = inject(Router);
+  modal = inject(ModalMessageComponent);
 
-  constructor(
-    private route: ActivatedRoute,
-    private loader: LoaderService,
-    private router: Router,
-    public modal: ModalMessageComponent
-  ) {}
+  currentActivity: Activity | null = null;
+  readonly isLoading = signal(true);
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -33,7 +35,7 @@ export class ActivityDescriptionPageComponent implements OnInit {
   }
 
   loadActivity(uuid?: string, name?: string) {
-    this.isLoading = true;
+    this.isLoading.set(true);
 
     this.loader
       .load()
@@ -50,11 +52,11 @@ export class ActivityDescriptionPageComponent implements OnInit {
         }
 
         this.currentActivity = activity;
-        this.isLoading = false;
+        this.isLoading.set(false);
       })
       .catch(err => {
         console.error('Error loading activity data:', err);
-        this.isLoading = false;
+        this.isLoading.set(false);
         this.displayMessage(
           new DialogInfo(err.message || 'Failed to load activity', 'An error occurred')
         );

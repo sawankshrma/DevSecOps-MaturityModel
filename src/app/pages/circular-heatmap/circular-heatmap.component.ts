@@ -1,13 +1,25 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { equalArray } from 'src/app/util/util';
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  effect,
+  DestroyRef,
+  afterNextRender,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { LoaderService } from 'src/app/service/loader/data-loader.service';
 import * as d3 from 'd3';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Location } from '@angular/common';
-import { MatChip } from '@angular/material/chips';
-import { Subject } from 'rxjs';
-import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
-import * as md from 'markdown-it';
+import { Location, KeyValuePipe } from '@angular/common';
+import {
+  MatChipListboxChange,
+  MatChipSelectionChange,
+  MatChipsModule,
+} from '@angular/material/chips';
+import { distinctUntilChanged } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import md from 'markdown-it';
 import {
   ModalMessageComponent,
   DialogInfo,
@@ -37,74 +49,77 @@ import {
   ViewEvidenceModalComponent,
   ViewEvidenceModalData,
 } from '../../component/view-evidence-modal/view-evidence-modal.component';
+import { dialogSizeConfig } from '../../util/dialog-sizes';
+import { ProgressSliderComponent } from '../../component/progress-slider/progress-slider.component';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { ActivityDescriptionComponent } from '../../component/activity-description/activity-description.component';
 
 @Component({
   selector: 'app-circular-heatmap',
   templateUrl: './circular-heatmap.component.html',
   styleUrls: ['./circular-heatmap.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [
+    ActivityDescriptionComponent,
+    MatIconModule,
+    MatButtonModule,
+    MatChipsModule,
+    MatDividerModule,
+    MatCardModule,
+    MatExpansionModule,
+    MatTooltipModule,
+    ProgressSliderComponent,
+    KeyValuePipe,
+  ],
 })
-export class CircularHeatmapComponent implements OnInit, OnDestroy {
+export class CircularHeatmapComponent {
+  private loader = inject(LoaderService);
+  private sectorService = inject(SectorService);
+  private settings = inject(SettingsService);
+  private themeService = inject(ThemeService);
+  private titleService = inject(TitleService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private location = inject(Location);
+  private dialog = inject(MatDialog);
+  private destroyRef = inject(DestroyRef);
+  modal = inject(ModalMessageComponent);
+
   Routing: string = '/activity-description';
   markdown: md = md();
-  showOverlay: boolean = false;
-  showFilters: boolean = true;
-  showActivityCard: any = null;
-
-  showActivityDetails: Activity | null = null;
-
-  dataStore: DataStore | null = null;
-
-  // New properties for refactored data
-  dimLabels: string[] = [];
-  filtersTeams: Record<string, boolean> = {};
-  filtersTeamGroups: Record<string, boolean> = {};
-  teamGroups: TeamGroups = {};
-  hasTeamsFilter: boolean = false;
   maxLevel: number = 0;
   dimensionLabels: string[] = [];
   progressStates: string[] = [];
-  allSectors: Sector[] = [];
-  selectedSector: Sector | null = null;
-  theme: string;
   theme_colors!: Record<string, string>;
 
-  private destroy$ = new Subject<void>();
+  // ── Signals ──
+  readonly showOverlay = signal(false);
+  readonly showFilters = signal(true);
+  readonly showActivityCard = signal<Sector | null>(null);
+  readonly showActivityDetails = signal<Activity | null>(null);
+  readonly dataStore = signal<DataStore | null>(null);
+  readonly filtersTeams = signal<Record<string, boolean>>({});
+  readonly filtersTeamGroups = signal<Record<string, boolean>>({});
+  readonly teamGroups = signal<TeamGroups>({});
+  readonly allSectors = signal<Sector[]>([]);
+  readonly selectedSector = signal<Sector | null>(null);
 
-  constructor(
-    private loader: LoaderService,
-    private sectorService: SectorService,
-    private settings: SettingsService,
-    private themeService: ThemeService,
-    private titleService: TitleService,
-    private router: Router,
-    private route: ActivatedRoute,
-    private location: Location,
-    private dialog: MatDialog,
-    public modal: ModalMessageComponent
-  ) {
-    this.theme = this.themeService.getTheme();
-  }
+  // ── Computed ──
+  readonly hasTeamsFilter = computed(() => Object.values(this.filtersTeams()).some(v => v));
 
-  ngOnInit(): void {
-    requestAnimationFrame(() => {
-      // Now the DOM has the correct class and CSS vars are live
-      console.log(`${perfNow()}s: ngOnInit: Initial theme:`, this.theme);
-      const css = getComputedStyle(document.body);
-      this.theme_colors = {
-        background: css.getPropertyValue('--heatmap-background').trim(),
-        filled: css.getPropertyValue('--heatmap-filled').trim(),
-        disabled: css.getPropertyValue('--heatmap-disabled').trim(),
-        cursor: css.getPropertyValue('--heatmap-cursor-hover').trim(),
-        stroke: css.getPropertyValue('--heatmap-stroke').trim(),
-      };
-      console.debug(`${perfNow()}s: ngOnInit: Heatmap theme colors:`, this.theme_colors);
-      if (!this.theme_colors['background'] || !this.theme_colors['filled']) {
-        console.debug(css);
-      }
+  constructor() {
+    this.destroyRef.onDestroy(() => this.titleService.clearTitle());
+
+    // Wait for DOM to be ready, then load data and draw the heatmap
+    afterNextRender(() => {
+      this.readThemeColors();
 
       console.log(`${perfNow()}: Heat: Loading yamls...`);
-      // Ensure that Levels and Teams load before MaturityData
-      // using promises, since ngOnInit does not support async/await
       this.loader
         .load()
         .then((dataStore: DataStore) => {
@@ -115,12 +130,13 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
             throw Error('No progressStore available');
           }
 
-          this.filtersTeams = this.buildFilters(dataStore.meta?.teams as string[]);
+          this.filtersTeams.set(this.buildFilters(dataStore.meta?.teams as string[]));
           // Insert key: 'All' with value: [], in the first position of the meta.teamGroups Record
           const allTeamsGroupName: string = dataStore.getMetaString('allTeamsGroupName') || 'All';
-          this.teamGroups = { [allTeamsGroupName]: [], ...(dataStore.meta?.teamGroups || {}) };
-          this.filtersTeamGroups = this.buildFilters(Object.keys(this.teamGroups));
-          this.filtersTeamGroups[allTeamsGroupName] = true;
+          this.teamGroups.set({ [allTeamsGroupName]: [], ...(dataStore.meta?.teamGroups || {}) });
+          const groupFilters = this.buildFilters(Object.keys(this.teamGroups()));
+          groupFilters[allTeamsGroupName] = true;
+          this.filtersTeamGroups.set(groupFilters);
 
           let progressDefinition: ProgressDefinitions = dataStore.meta?.progressDefinition || {};
           this.sectorService.init(
@@ -134,7 +150,12 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
           this.setYamlData(dataStore);
 
           // For now, just draw the sectors (no activities yet)
-          this.loadCircularHeatMap('#chart', this.allSectors, this.dimensionLabels, this.maxLevel);
+          this.loadCircularHeatMap(
+            '#chart',
+            this.allSectors(),
+            this.dimensionLabels,
+            this.maxLevel
+          );
           console.log(`${perfNow()}: Page loaded: Circular Heatmap`);
 
           // Check if there's a URL fragment and open the corresponding activity
@@ -147,36 +168,36 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
           }
         });
     });
-    // Reactively handle theme changes (if user toggles later)
-    this.themeService.theme$.pipe(takeUntil(this.destroy$)).subscribe((theme: string) => {
-      console.log(`${perfNow()}s: themeService.pipe: Theme changed to:`, theme);
-      const css = getComputedStyle(document.body);
-      this.theme_colors = {
-        background: css.getPropertyValue('--heatmap-background').trim(),
-        filled: css.getPropertyValue('--heatmap-filled').trim(),
-        disabled: css.getPropertyValue('--heatmap-disabled').trim(),
-        cursor: css.getPropertyValue('--heatmap-cursor-hover').trim(),
-        stroke: css.getPropertyValue('--heatmap-stroke').trim(),
-      };
-      console.debug(`${perfNow()}s: themeService.pipe: Heatmap theme colors:`, this.theme_colors);
 
-      // Repaint segments with new theme
-      this.reColorHeatmap();
+    // Reactively repaint heatmap on theme changes
+    effect(() => {
+      const theme = this.themeService.theme(); // tracked dependency
+      this.readThemeColors();
+      console.log(`${perfNow()}s: theme effect: Theme changed to:`, theme);
+      if (this.allSectors().length > 0) {
+        this.reColorHeatmap();
+      }
     });
   }
 
-  ngOnDestroy(): void {
-    this.titleService.clearTitle();
-    this.destroy$.next();
-    this.destroy$.complete();
+  private readThemeColors(): void {
+    const css = getComputedStyle(document.body);
+    this.theme_colors = {
+      background: css.getPropertyValue('--heatmap-background').trim(),
+      filled: css.getPropertyValue('--heatmap-filled').trim(),
+      disabled: css.getPropertyValue('--heatmap-disabled').trim(),
+      cursor: css.getPropertyValue('--heatmap-cursor-hover').trim(),
+      stroke: css.getPropertyValue('--heatmap-stroke').trim(),
+    };
+    console.debug(`${perfNow()}s: readThemeColors:`, this.theme_colors);
   }
 
   checkUrlFragmentForActivity() {
     // Check if there's a URL fragment that might be an activity UUID
     this.route.fragment
-      .pipe(takeUntil(this.destroy$), distinctUntilChanged())
+      .pipe(takeUntilDestroyed(this.destroyRef), distinctUntilChanged())
       .subscribe(fragment => {
-        if (fragment && this.dataStore) {
+        if (fragment && this.dataStore()) {
           this.navigateToActivityByUuid(fragment);
         }
       });
@@ -187,18 +208,17 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
   }
 
   setYamlData(dataStore: DataStore) {
-    this.dataStore = dataStore;
+    this.dataStore.set(dataStore);
     this.maxLevel = this.settings?.getMaxLevel() || dataStore.getMaxLevel();
     this.dimensionLabels = dataStore?.activityStore?.getAllDimensionNames() || [];
 
     // Prepare all sectors: one for each (dimension, level) pair
-    this.allSectors = [];
+    const sectors: Sector[] = [];
     for (let level = 1; level <= this.maxLevel; level++) {
-      // let DEBUG_DIM_INDEX = 0;
       for (let dimName of this.dimensionLabels) {
         const activities: Activity[] =
           dataStore?.activityStore?.getActivities(dimName, level) || [];
-        this.allSectors.push({
+        sectors.push({
           dimension: dimName,
           // dimensionIndex: DEBUG_DIM_INDEX++,
           level: level,
@@ -206,6 +226,7 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
         });
       }
     }
+    this.allSectors.set(sectors);
   }
 
   buildFilters(names: string[]): Record<string, boolean> {
@@ -218,65 +239,80 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
     return filters;
   }
 
-  toggleTeamGroupFilter(chip: MatChip) {
-    let teamGroup = chip.value.trim();
-    if (!chip.selected) {
-      chip.toggleSelected();
-      console.log(`${perfNow()}: Heat: Chip flip Group '${teamGroup}: ${chip.selected}`);
-
-      // Update the team selections based on the team group selection
-      let selectedTeams: TeamName[] = [];
-      Object.keys(this.filtersTeams).forEach(key => {
-        this.filtersTeams[key] = this.teamGroups[teamGroup]?.includes(key) || false;
-        if (this.filtersTeams[key]) {
-          selectedTeams.push(key);
-        }
-        this.sectorService.setVisibleTeams(selectedTeams);
-      });
-      this.hasTeamsFilter = Object.values(this.filtersTeams).some(v => v === true);
-      this.reColorHeatmap();
-    } else {
-      console.log(`${perfNow()}: Heat: Chip flip Group '${teamGroup}: already on`);
+  onGroupChipChange(event: MatChipSelectionChange, groupKey: string) {
+    if (!event.selected && event.isUserInput) {
+      event.source.select();
+      return;
     }
+
+    if (!event.selected || this.filtersTeamGroups()[groupKey]) return;
+
+    console.log(`${perfNow()}: Heat: Chip flip Group '${groupKey}'`);
+
+    const newGroupFilters: Record<string, boolean> = {};
+    Object.keys(this.filtersTeamGroups()).forEach(key => {
+      newGroupFilters[key] = key === groupKey;
+    });
+    this.filtersTeamGroups.set(newGroupFilters);
+
+    const groups = this.teamGroups();
+    const selectedTeams: TeamName[] = [];
+    const newTeamFilters: Record<string, boolean> = {};
+    Object.keys(this.filtersTeams()).forEach(key => {
+      newTeamFilters[key] = groups[groupKey]?.includes(key) || false;
+      if (newTeamFilters[key]) selectedTeams.push(key);
+    });
+    this.filtersTeams.set(newTeamFilters);
+    this.sectorService.setVisibleTeams(selectedTeams);
+    this.reColorHeatmap();
   }
 
-  toggleTeamFilter(chip: MatChip) {
-    chip.toggleSelected();
-    this.filtersTeams[chip.value.trim()] = chip.selected;
-    console.log(`${perfNow()}: Heat: Chip flip Team '${chip.value}: ${chip.selected}`);
+  toggleTeamFilter(event: MatChipListboxChange) {
+    const selectedTeams: string[] = event.value || [];
+    console.log(`${perfNow()}: Heat: Team filter changed: [${selectedTeams.join(', ')}]`);
 
-    this.hasTeamsFilter = Object.values(this.filtersTeams).some(v => v === true);
+    const newTeamFilters: Record<string, boolean> = {};
+    Object.keys(this.filtersTeams()).forEach(key => {
+      newTeamFilters[key] = selectedTeams.includes(key);
+    });
+    this.filtersTeams.set(newTeamFilters);
 
-    let selectedTeams: string[] = Object.keys(this.filtersTeams).filter(
-      key => this.filtersTeams[key]
-    );
     this.sectorService.setVisibleTeams(selectedTeams);
 
-    // Update team group filter, if one matches selection
-    Object.keys(this.teamGroups || {}).forEach(group => {
-      let match: boolean = equalArray(selectedTeams, this.teamGroups[group]);
-      this.filtersTeamGroups[group] = match;
+    // Set-based comparison for group highlight (fixes order-sensitive bug)
+    const selectedSet = new Set(selectedTeams);
+    const groups = this.teamGroups();
+    const newGroupFilters: Record<string, boolean> = {};
+    Object.keys(groups).forEach(group => {
+      const groupTeams = groups[group];
+      newGroupFilters[group] =
+        groupTeams.length > 0 &&
+        groupTeams.length === selectedSet.size &&
+        groupTeams.every(t => selectedSet.has(t));
     });
-    this.filtersTeamGroups = this.filtersTeamGroups;
+    this.filtersTeamGroups.set(newGroupFilters);
 
     this.reColorHeatmap();
   }
 
   getTeamProgressState(activityUuid: string, teamName: string): string {
-    return this.dataStore?.progressStore?.getTeamActivityTitle(activityUuid, teamName) || '';
+    return this.dataStore()?.progressStore?.getTeamActivityTitle(activityUuid, teamName) || '';
   }
 
   getBackedupTeamProgressState(activityUuid: string, teamName: string): string {
-    return this.dataStore?.progressStore?.getTeamActivityTitle(activityUuid, teamName, true) || '';
+    return (
+      this.dataStore()?.progressStore?.getTeamActivityTitle(activityUuid, teamName, true) || ''
+    );
   }
 
   onProgressChange(activityUuid: Uuid, teamName: TeamName, newProgress: ProgressTitle) {
-    if (!this.dataStore || !this.dataStore.progressStore || !this.dataStore.activityStore) {
+    const ds = this.dataStore();
+    if (!ds || !ds.progressStore || !ds.activityStore) {
       throw Error('Data store or progress store is not initialized.');
     }
 
-    this.dataStore.progressStore.setTeamActivityProgressState(activityUuid, teamName, newProgress);
-    let activity: Activity = this.dataStore.activityStore.getActivityByUuid(activityUuid);
+    ds.progressStore.setTeamActivityProgressState(activityUuid, teamName, newProgress);
+    let activity: Activity = ds.activityStore.getActivityByUuid(activityUuid);
     let index =
       this.dimensionLabels.indexOf(activity.dimension) +
       this.dimensionLabels.length * (activity.level - 1);
@@ -296,7 +332,7 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
 
   onDependencyClicked(activityName: string) {
     console.log(`${perfNow()}: Heat: Dependency clicked: '${activityName}'`);
-    const activity = this.dataStore?.activityStore?.getActivityByName(activityName);
+    const activity = this.dataStore()?.activityStore?.getActivityByName(activityName);
     if (activity?.uuid) {
       this.navigateToActivityByUuid(activity.uuid);
     }
@@ -336,7 +372,10 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
 
     chart.accessor(function (sector: Sector) {
       let progressValue: number = _self.getSectorProgress(sector);
-      if (!isNaN(progressValue) && progressValue !== 0) console.debug(`${perfNow()}s: Initial sector value  ${progressValue.toFixed(2)} - '${sector.dimension}' Level ${sector.level}`);  // eslint-disable-line
+      if (!isNaN(progressValue) && progressValue !== 0)
+        console.debug(
+          `${perfNow()}s: Initial sector value  ${progressValue.toFixed(2)} - '${sector.dimension}' Level ${sector.level}`
+        );
       return progressValue;
     });
 
@@ -361,16 +400,21 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
       .on('click', function () {
         var clickedId = d3.select(this).attr('id');
         var index = parseInt(clickedId.replace('index-', ''));
-        _self.selectedSector = dataset[index]; // Store selected sector for details
+        const sector = dataset[index];
+        _self.selectedSector.set(sector);
         // Assign showActivityCard to the sector if it has activities, else null
-        if (_self.selectedSector?.activities?.length) {
+        if (sector?.activities?.length) {
           _self.setSectorCursor(svg, '#selected', clickedId);
-          _self.showActivityCard = _self.selectedSector;
-          console.log(`${perfNow()}: Heat: Clicked sector: '${_self.selectedSector.dimension}' Level: ${_self.selectedSector.level}`); // eslint-disable-line
+          _self.showActivityCard.set(sector);
+          console.log(
+            `${perfNow()}: Heat: Clicked sector: '${sector.dimension}' Level: ${sector.level}`
+          );
         } else {
-          _self.showActivityCard = null;
+          _self.showActivityCard.set(null);
           _self.setSectorCursor(svg, '#selected', '');
-          console.log(`${perfNow()}: Heat: Clicked disabled sector: '${_self?.selectedSector?.dimension}' Level: ${_self?.selectedSector?.level}`); // eslint-disable-line
+          console.log(
+            `${perfNow()}: Heat: Clicked disabled sector: '${sector?.dimension}' Level: ${sector?.level}`
+          );
         }
       })
       .on('mouseover', function () {
@@ -651,53 +695,55 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
 
   openActivityDetails(uuid: string) {
     // Find the activity in the selected sector
-    if (!this.dataStore || !this.dataStore.activityStore) {
+    const ds = this.dataStore();
+    if (!ds || !ds.activityStore) {
       console.error(`Data store is not initialized. Cannot open activity ${uuid}`);
       return;
     }
-    if (!this.showActivityCard || !this.showActivityCard.activities) {
-      this.showOverlay = true;
+    const card = this.showActivityCard();
+    if (!card || !card.activities) {
+      this.showOverlay.set(true);
       return;
     }
 
-    const activity: Activity = this.dataStore.activityStore.getActivityByUuid(uuid);
+    const activity: Activity = ds.activityStore.getActivityByUuid(uuid);
     if (!activity) {
-      this.showOverlay = true;
+      this.showOverlay.set(true);
       return;
     }
 
     // Prepare navigationExtras and details
-    /* eslint-disable */
+
     console.log(`${perfNow()}: Heat: Open Overlay: '${activity.name}'`);
-    this.showActivityDetails = activity;
-    this.showOverlay = true;
+    this.showActivityDetails.set(activity);
+    this.showOverlay.set(true);
 
     // Update URL with activity UUID as fragment
     if (activity.uuid) {
       this.router.navigate([], {
         relativeTo: this.route,
         fragment: activity.uuid,
-        queryParamsHandling: 'preserve'
+        queryParamsHandling: 'preserve',
       });
     }
-    /* eslint-enable */
   }
 
   navigateToActivityByUuid(uuid: string) {
     console.log(`${perfNow()}: Heat: Attempting to open activity with UUID: ${uuid}`);
-    if (!this.dataStore || !this.dataStore.activityStore) {
+    const ds = this.dataStore();
+    if (!ds || !ds.activityStore) {
       console.error('Data store is not initialized. Cannot open activity by UUID');
       return;
     }
-    const activity: Activity = this.dataStore.activityStore.getActivityByUuid(uuid);
-    const sector = this.allSectors.find(s => s.activities.some(a => a.uuid === uuid));
+    const activity: Activity = ds.activityStore.getActivityByUuid(uuid);
+    const sector = this.allSectors().find(s => s.activities.some(a => a.uuid === uuid));
     if (activity && sector) {
-      this.selectedSector = sector;
-      this.showActivityCard = sector;
+      this.selectedSector.set(sector);
+      this.showActivityCard.set(sector);
       this.openActivityDetails(activity.uuid);
     } else {
       // Only close the overlay, do not update the URL
-      this.showOverlay = false;
+      this.showOverlay.set(false);
       console.warn(`Heat: Activity with UUID ${uuid} not found.`);
     }
   }
@@ -709,16 +755,17 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
       fragment: undefined,
       queryParamsHandling: 'preserve',
     });
-    this.showOverlay = false;
+    this.showOverlay.set(false);
   }
 
   toggleFilters() {
-    this.showFilters = !this.showFilters;
+    this.showFilters.update(v => !v);
   }
 
   reColorHeatmap() {
-    console.debug(`${perfNow()}s: Recoloring heatmap of ${this.allSectors.length} sectors`);
-    for (let index = 0; index < this.allSectors.length; index++) {
+    const sectors = this.allSectors();
+    console.debug(`${perfNow()}s: Recoloring heatmap of ${sectors.length} sectors`);
+    for (let index = 0; index < sectors.length; index++) {
       this.recolorSector(index);
     }
   }
@@ -729,8 +776,11 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
       .domain([0, 1])
       .range([this.theme_colors['background'], this.theme_colors['filled']]);
 
-    let progressValue: number = this.getSectorProgress(this.allSectors[index]);
-    if (progressValue) console.debug(`${perfNow()}s: recolorSector #${index} sector: ${progressValue.toFixed(2)} (${this.theme_colors['filled']})`); // eslint-disable-line
+    let progressValue: number = this.getSectorProgress(this.allSectors()[index]);
+    if (progressValue)
+      console.debug(
+        `${perfNow()}s: recolorSector #${index} sector: ${progressValue.toFixed(2)} (${this.theme_colors['filled']})`
+      );
 
     d3.select('#index-' + index).attr(
       'fill',
@@ -740,33 +790,35 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
 
   exportTeamProgress() {
     console.log(`${perfNow()}: Exporting teams and groups`);
+    const ds = this.dataStore();
 
-    let yamlStr: string | null = this.dataStore?.progressStore?.asYamlString() || null;
+    let yamlStr: string | null = ds?.progressStore?.asYamlString() || null;
     if (!yamlStr) {
       this.displayMessage(new DialogInfo('No team progress data available', 'Export Error'));
       return;
     }
 
-    downloadYamlFile(yamlStr, this.dataStore?.meta?.teamProgressFile || 'team-progress.yaml');
+    downloadYamlFile(yamlStr, ds?.meta?.teamProgressFile || 'team-progress.yaml');
   }
 
   exportTeamEvidences() {
     console.log(`${perfNow()}: Exporting team evidence`);
+    const ds = this.dataStore();
 
-    let yamlStr: string | null = this.dataStore?.evidenceStore?.asYamlString() || null;
+    let yamlStr: string | null = ds?.evidenceStore?.asYamlString() || null;
     if (!yamlStr) {
       this.displayMessage(new DialogInfo('No team evidence data available', 'Export Error'));
       return;
     }
 
-    downloadYamlFile(yamlStr, this.dataStore?.meta?.teamEvidenceFile || 'team-evidence.yaml');
+    downloadYamlFile(yamlStr, ds?.meta?.teamEvidenceFile || 'team-evidence.yaml');
   }
 
   async deleteLocalTeamsProgress() {
     let buttonClicked: string = await this.displayDeleteLocalFilesDialog('progress');
 
     if (buttonClicked === 'Delete') {
-      this.dataStore?.progressStore?.deleteBrowserStoredTeamProgress();
+      this.dataStore()?.progressStore?.deleteBrowserStoredTeamProgress();
       location.reload(); // Make sure all load routines are initialized
     }
   }
@@ -775,7 +827,7 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
     let buttonClicked: string = await this.displayDeleteLocalFilesDialog('evidence');
 
     if (buttonClicked === 'Delete') {
-      this.dataStore?.evidenceStore?.deleteBrowserStoredEvidence();
+      this.dataStore()?.evidenceStore?.deleteBrowserStoredEvidence();
       location.reload(); // Make sure all load routines are initialized
     }
   }
@@ -821,23 +873,23 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
   }
 
   openAddEvidenceModal(activityUuid: string): void {
-    const teams = this.dataStore?.meta?.teams || [];
+    const ds = this.dataStore();
+    const teams = ds?.meta?.teams || [];
 
     const dialogData: AddEvidenceModalData = {
       activityUuid,
       allTeams: teams,
-      teamGroups: this.teamGroups,
+      teamGroups: this.teamGroups(),
     };
 
     const dialogRef = this.dialog.open(AddEvidenceModalComponent, {
-      width: '700px',
-      maxHeight: '90vh',
+      ...dialogSizeConfig('md'),
       data: dialogData,
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result && result.entry && this.dataStore?.evidenceStore) {
-        this.dataStore.evidenceStore.addEvidence(result.activityUuid, result.entry);
+      if (result && result.entry && ds?.evidenceStore) {
+        ds.evidenceStore.addEvidence(result.activityUuid, result.entry);
         console.log(`${perfNow()}: Evidence added for activity ${result.activityUuid}`);
       }
     });
@@ -850,8 +902,7 @@ export class CircularHeatmapComponent implements OnInit, OnDestroy {
     };
 
     this.dialog.open(ViewEvidenceModalComponent, {
-      width: '700px',
-      maxHeight: '90vh',
+      ...dialogSizeConfig('md'),
       data: dialogData,
     });
   }

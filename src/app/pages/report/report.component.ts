@@ -1,4 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  computed,
+  inject,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { LoaderService } from '../../service/loader/data-loader.service';
 import { SettingsService } from '../../service/settings/settings.service';
@@ -23,6 +30,14 @@ import {
   ViewEvidenceModalComponent,
   ViewEvidenceModalData,
 } from '../../component/view-evidence-modal/view-evidence-modal.component';
+import { dialogSizeConfig } from '../../util/dialog-sizes';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { ColResizeDirective } from '../../directive/col-resize.directive';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TeamSelectorComponent } from '../../component/team-selector/team-selector.component';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { TopHeaderComponent } from '../../component/top-header/top-header.component';
 
 export interface ReportSubDimension {
   name: string;
@@ -46,13 +61,26 @@ export interface LevelOverview {
   templateUrl: './report.component.html',
   styleUrls: ['./report.component.css'],
   providers: [DatePipe],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [
+    TopHeaderComponent,
+    MatButtonModule,
+    MatIconModule,
+    TeamSelectorComponent,
+    MatProgressSpinnerModule,
+    ColResizeDirective,
+    MatTooltipModule,
+  ],
 })
 export class ReportComponent implements OnInit {
-  reportConfig: ReportConfig;
-  allActivities: Activity[] = [];
-  filteredDimensions: ReportDimension[] = [];
-  levelOverview: LevelOverview[] = [];
-  isLoading: boolean = true;
+  private loader = inject(LoaderService);
+  private settings = inject(SettingsService);
+  private dialog = inject(MatDialog);
+  private datePipe = inject(DatePipe);
+
+  reportConfig = signal<ReportConfig>(getReportConfig());
+  allActivities = signal<Activity[]>([]);
+  readonly isLoading = signal(true);
 
   // For the config modal
   allDimensionNames: string[] = [];
@@ -62,86 +90,18 @@ export class ReportComponent implements OnInit {
 
   allProgressTitles: ProgressTitle[] = [];
 
-  // Max level from settings
-  maxLevel: number = 0;
+  maxLevelFromSettings: number = 0;
 
   private activityStore: ActivityStore | null = null;
 
-  constructor(
-    private loader: LoaderService,
-    private settings: SettingsService,
-    private dialog: MatDialog,
-    private datePipe: DatePipe
-  ) {
-    this.reportConfig = getReportConfig();
-  }
-
-  ngOnInit(): void {
-    this.loadActivities();
-  }
-
-  get progressStore(): ProgressStore | undefined {
-    return this.loader.datastore?.progressStore ?? undefined;
-  }
-
-  loadActivities(): void {
-    this.isLoading = true;
-    this.loader
-      .load()
-      .then((dataStore: DataStore) => {
-        if (!dataStore.activityStore) {
-          this.isLoading = false;
-          return;
-        }
-
-        this.maxLevel = this.settings.getMaxLevel() || dataStore.getMaxLevel();
-        this.allActivities = dataStore.activityStore.getAllActivitiesUpToLevel(this.maxLevel);
-        this.activityStore = dataStore.activityStore;
-
-        const dimensionSet = new Set<string>();
-        const subdimensionSet = new Set<string>();
-
-        for (const activity of this.allActivities) {
-          dimensionSet.add(activity.category);
-          subdimensionSet.add(activity.dimension);
-        }
-
-        this.allDimensionNames = Array.from(dimensionSet).sort();
-        this.allSubdimensionNames = Array.from(subdimensionSet).sort();
-        this.allTeams = dataStore?.meta?.teams || [];
-        this.teamGroups = dataStore?.meta?.teamGroups || {};
-
-        // Collect progress titles
-        if (dataStore.progressStore) {
-          const inProgress = dataStore.progressStore.getInProgressTitles();
-          const completed = dataStore.progressStore.getCompletedProgressTitle();
-          this.allProgressTitles = [...inProgress, completed].filter(t => !!t);
-        }
-
-        // Auto-select all teams if none selected yet
-        if (this.reportConfig.selectedTeams.length === 0 && this.allTeams.length > 0) {
-          this.reportConfig.selectedTeams = [...this.allTeams];
-        }
-
-        this.applyFilters();
-        this.isLoading = false;
-      })
-      .catch(err => {
-        console.error('Error loading activities for report:', err);
-        this.isLoading = false;
-      });
-  }
-
-  applyFilters(): void {
-    const config = this.reportConfig;
+  filteredDimensions = computed<ReportDimension[]>(() => {
+    const config = this.reportConfig();
+    const all = this.allActivities();
 
     // Filter activities using hierarchical exclusion
-    const filtered = this.allActivities.filter(activity => {
-      // 1. Check dimension (category)
+    const filtered = all.filter(activity => {
       if (config.excludedDimensions.includes(activity.category)) return false;
-      // 2. Check subdimension (dimension)
       if (config.excludedSubdimensions.includes(activity.dimension)) return false;
-      // 4. Check individual activity
       if (config.excludedActivities.includes(activity.uuid)) return false;
       return true;
     });
@@ -160,7 +120,7 @@ export class ReportComponent implements OnInit {
       subMap.get(activity.dimension)!.push(activity);
     }
 
-    this.filteredDimensions = [];
+    const result: ReportDimension[] = [];
     const sortedDimensions = Array.from(dimensionMap.keys()).sort();
     for (const dimName of sortedDimensions) {
       const subMap = dimensionMap.get(dimName)!;
@@ -175,13 +135,22 @@ export class ReportComponent implements OnInit {
         });
         subDimensions.push({ name: subDimName, activities });
       }
-      this.filteredDimensions.push({ name: dimName, subDimensions });
+      result.push({ name: dimName, subDimensions });
+    }
+    return result;
+  });
+
+  levelByLevelOverviewFromActivties = computed<LevelOverview[]>(() => {
+    const config = this.reportConfig();
+    const dims = this.filteredDimensions();
+
+    const activities: Activity[] = [];
+    for (const dim of dims) {
+      for (const sub of dim.subDimensions) {
+        activities.push(...sub.activities);
+      }
     }
 
-    this.buildLevelOverview(filtered);
-  }
-
-  buildLevelOverview(activities: Activity[]): void {
     const levelMap = new Map<number, { total: number; completed: number }>();
 
     for (const activity of activities) {
@@ -191,8 +160,8 @@ export class ReportComponent implements OnInit {
       const entry = levelMap.get(activity.level)!;
       entry.total++;
 
-      if (this.reportConfig.selectedTeams.length > 0) {
-        const allCompleted = this.reportConfig.selectedTeams.every(team =>
+      if (config.selectedTeams.length > 0) {
+        const allCompleted = config.selectedTeams.every(team =>
           this.isActivityCompletedByTeam(activity, team)
         );
         if (allCompleted) {
@@ -201,7 +170,7 @@ export class ReportComponent implements OnInit {
       }
     }
 
-    this.levelOverview = Array.from(levelMap.entries())
+    return Array.from(levelMap.entries())
       .sort(([a], [b]) => a - b)
       .map(([level, data]) => ({
         level,
@@ -209,6 +178,73 @@ export class ReportComponent implements OnInit {
         completedCount: data.completed,
         completionPercent: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0,
       }));
+  });
+
+  totalFilteredActivities = computed(() => {
+    let count = 0;
+    for (const dim of this.filteredDimensions()) {
+      for (const sub of dim.subDimensions) {
+        count += sub.activities.length;
+      }
+    }
+    return count;
+  });
+
+  ngOnInit(): void {
+    this.loadActivities();
+  }
+
+  get progressStore(): ProgressStore | undefined {
+    return this.loader.datastore?.progressStore ?? undefined;
+  }
+
+  loadActivities(): void {
+    this.isLoading.set(true);
+    this.loader
+      .load()
+      .then((dataStore: DataStore) => {
+        if (!dataStore.activityStore) {
+          this.isLoading.set(false);
+          return;
+        }
+
+        this.maxLevelFromSettings = this.settings.getMaxLevel() || dataStore.getMaxLevel();
+        const activities = dataStore.activityStore.getAllActivitiesUpToLevel(
+          this.maxLevelFromSettings
+        );
+        this.activityStore = dataStore.activityStore;
+
+        const dimensionSet = new Set<string>();
+        const subdimensionSet = new Set<string>();
+
+        for (const activity of activities) {
+          dimensionSet.add(activity.category);
+          subdimensionSet.add(activity.dimension);
+        }
+
+        this.allDimensionNames = Array.from(dimensionSet).sort();
+        this.allSubdimensionNames = Array.from(subdimensionSet).sort();
+        this.allTeams = dataStore?.meta?.teams || [];
+        this.teamGroups = dataStore?.meta?.teamGroups || {};
+
+        if (dataStore.progressStore) {
+          const inProgress = dataStore.progressStore.getInProgressTitles();
+          const completed = dataStore.progressStore.getCompletedProgressTitle();
+          this.allProgressTitles = [...inProgress, completed].filter(t => !!t);
+        }
+
+        const currentConfig = this.reportConfig();
+        if (currentConfig.selectedTeams.length === 0 && this.allTeams.length > 0) {
+          this.reportConfig.set({ ...currentConfig, selectedTeams: [...this.allTeams] });
+        }
+
+        this.allActivities.set(activities);
+        this.isLoading.set(false);
+      })
+      .catch(err => {
+        console.error('Error loading activities for report:', err);
+        this.isLoading.set(false);
+      });
   }
 
   // --- Progress helpers ---
@@ -230,7 +266,7 @@ export class ReportComponent implements OnInit {
   getTeamsForProgress(activity: Activity, progressTitle: ProgressTitle): string {
     if (!this.progressStore || !activity.uuid) return '';
     const teams: string[] = [];
-    for (const team of this.reportConfig.selectedTeams) {
+    for (const team of this.reportConfig().selectedTeams) {
       const teamTitle = this.progressStore.getTeamProgressTitle(activity.uuid, team);
       if (teamTitle === progressTitle) {
         teams.push(team);
@@ -292,8 +328,8 @@ export class ReportComponent implements OnInit {
 
   openConfigModal(): void {
     const modalData: ReportConfigModalData = {
-      config: this.reportConfig,
-      allActivities: this.allActivities,
+      config: this.reportConfig(),
+      allActivities: this.allActivities(),
       allTeams: this.allTeams,
       allDimensions: this.allDimensionNames,
       allSubdimensions: this.allSubdimensionNames,
@@ -302,24 +338,22 @@ export class ReportComponent implements OnInit {
     };
 
     const dialogRef = this.dialog.open(ReportConfigModalComponent, {
-      width: '700px',
-      maxHeight: '90vh',
+      ...dialogSizeConfig('lg'),
       data: modalData,
     });
 
     dialogRef.afterClosed().subscribe((result: ReportConfig | null) => {
       if (result) {
-        this.reportConfig = result;
+        this.reportConfig.set(result);
         saveReportConfig(result);
-        this.applyFilters();
       }
     });
   }
 
   onTeamsChanged(teams: string[]): void {
-    this.reportConfig.selectedTeams = teams;
-    saveReportConfig(this.reportConfig);
-    this.applyFilters();
+    const updated = { ...this.reportConfig(), selectedTeams: teams };
+    this.reportConfig.set(updated);
+    saveReportConfig(updated);
   }
 
   printReport(): void {
@@ -356,7 +390,7 @@ export class ReportComponent implements OnInit {
 
   formatReferences(refs: any): string {
     if (!refs) return '—';
-    const attrs = this.reportConfig.activityAttributes;
+    const attrs = this.reportConfig().activityAttributes;
     const pairs: string[] = [];
 
     const renderItems = (key: string, items: any[] | undefined): void => {
@@ -407,16 +441,6 @@ export class ReportComponent implements OnInit {
     return items.join(', ');
   }
 
-  get totalFilteredActivities(): number {
-    let count = 0;
-    for (const dim of this.filteredDimensions) {
-      for (const sub of dim.subDimensions) {
-        count += sub.activities.length;
-      }
-    }
-    return count;
-  }
-
   formatEvidence(activity: Activity): string {
     const evidenceStore = this.loader.datastore?.evidenceStore;
     if (!evidenceStore || !activity.uuid || !evidenceStore.hasEvidence(activity.uuid)) {
@@ -424,8 +448,8 @@ export class ReportComponent implements OnInit {
     }
 
     const allEntries: EvidenceEntry[] = evidenceStore.getEvidence(activity.uuid);
-    const attrs = this.reportConfig.activityAttributes;
-    const selectedTeams = this.reportConfig.selectedTeams;
+    const attrs = this.reportConfig().activityAttributes;
+    const selectedTeams = this.reportConfig().selectedTeams;
 
     const entries = allEntries.filter(entry => entry.teams.some(t => selectedTeams.includes(t)));
 
@@ -481,8 +505,7 @@ export class ReportComponent implements OnInit {
     };
 
     this.dialog.open(ViewEvidenceModalComponent, {
-      width: '700px',
-      maxHeight: '90vh',
+      ...dialogSizeConfig('md'),
       data: dialogData,
     });
   }

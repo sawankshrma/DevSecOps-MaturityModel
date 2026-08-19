@@ -1,9 +1,20 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+
+import { MatSliderModule } from '@angular/material/slider';
 
 @Component({
   selector: 'app-progress-slider',
   templateUrl: './progress-slider.component.html',
   styleUrls: ['./progress-slider.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [MatSliderModule],
 })
 export class ProgressSliderComponent implements OnInit {
   @Input() DBG_name: string = '';

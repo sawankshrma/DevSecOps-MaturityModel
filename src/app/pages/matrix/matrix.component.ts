@@ -1,16 +1,29 @@
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ElementRef,
+  ViewChild,
+  signal,
+  computed,
+  inject,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatTableModule } from '@angular/material/table';
 import { Router, NavigationExtras } from '@angular/router';
 import { LoaderService } from 'src/app/service/loader/data-loader.service';
 import { Activity, ActivityStore, Data } from 'src/app/model/activity-store';
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { MatChip, MatChipList } from '@angular/material/chips';
-import { deepCopy } from 'src/app/util/util';
+import { MatChipListbox, MatChipListboxChange, MatChipsModule } from '@angular/material/chips';
 import { DataStore } from 'src/app/model/data-store';
 import { perfNow } from 'src/app/util/util';
 import { SettingsService } from 'src/app/service/settings/settings.service';
 import { NotificationService } from 'src/app/service/notification.service';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
+import { KeyValuePipe } from '@angular/common';
+import { TopHeaderComponent } from '../../component/top-header/top-header.component';
+import { environment } from 'src/environments/environment';
 
 export interface MatrixRow {
   Category: string;
@@ -23,44 +36,85 @@ export interface MatrixRow {
   level6: Activity[];
   level7: Activity[];
 }
-type LevelKey = keyof Pick<MatrixRow, 'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6' | 'level7'>;  // eslint-disable-line
+type LevelKey = keyof Pick<
+  MatrixRow,
+  'level1' | 'level2' | 'level3' | 'level4' | 'level5' | 'level6' | 'level7'
+>;
 
 @UntilDestroy()
 @Component({
   selector: 'app-matrix',
   templateUrl: './matrix.component.html',
   styleUrls: ['./matrix.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [
+    TopHeaderComponent,
+    MatChipsModule,
+    MatDividerModule,
+    MatTableModule,
+    MatIconModule,
+    KeyValuePipe,
+  ],
 })
 export class MatrixComponent implements OnInit {
+  private loader = inject(LoaderService);
+  private settings = inject(SettingsService);
+  private router = inject(Router);
+  private notificationService = inject(NotificationService);
+
   Routing: string = '/activity-description';
   dataStore: DataStore = new DataStore();
   data: Data = {};
-  levels: Partial<Record<LevelKey, string>> = {};
-  filtersTag: Record<string, boolean> = {};
-  filtersDim: Record<string, boolean> = {};
-  columnNames: string[] = [];
-  allCategoryNames: string[] = [];
-  allDimensionNames: string[] = [];
-  MATRIX_DATA: MatrixRow[] = [];
-  dataSource: any = new MatTableDataSource<MatrixRow>(this.MATRIX_DATA);
+  levels = signal<Partial<Record<LevelKey, string>>>({});
+  filtersTag = signal<Record<string, boolean>>({});
+  filtersDim = signal<Record<string, boolean>>({});
+  columnNames = signal<string[]>([]);
+  MATRIX_DATA = signal<MatrixRow[]>([]);
 
-  /* eslint-disable */
-  constructor(
-    private loader: LoaderService,
-    private settings: SettingsService,
-    private router: Router,
-    private notificationService: NotificationService
-  ) {}
-  /* eslint-enable */
+  dataSource = computed((): MatrixRow[] => {
+    const hasDimFilter = Object.values(this.filtersDim()).some(v => v === true);
+    const hasTagFilter = Object.values(this.filtersTag()).some(v => v === true);
+
+    if (!hasTagFilter && !hasDimFilter) {
+      return this.MATRIX_DATA();
+    }
+
+    let itemsStage1: MatrixRow[];
+    if (!hasDimFilter) {
+      itemsStage1 = this.MATRIX_DATA();
+    } else {
+      itemsStage1 = this.MATRIX_DATA().filter(srcItem => this.filtersDim()[srcItem.Dimension]);
+    }
+
+    if (!hasTagFilter) {
+      return itemsStage1;
+    }
+
+    const itemsStage2: MatrixRow[] = [];
+    for (const srcItem of itemsStage1) {
+      let hasContent = false;
+      const trgItem: Partial<MatrixRow> = {};
+
+      for (const lvl of Object.keys(this.levels()) as LevelKey[]) {
+        const tmp = srcItem[lvl].filter(activity => this.hasTag(activity));
+        if (tmp.length > 0) {
+          trgItem[lvl] = tmp;
+          hasContent = true;
+        }
+      }
+
+      if (hasContent) {
+        trgItem.Category = srcItem.Category;
+        trgItem.Dimension = srcItem.Dimension;
+        itemsStage2.push(trgItem as MatrixRow);
+      }
+    }
+    return itemsStage2;
+  });
 
   reset() {
-    for (let dim in this.filtersDim) {
-      this.filtersDim[dim] = false;
-    }
-    for (let tag in this.filtersTag) {
-      this.filtersTag[tag] = false;
-    }
-    this.updateActivitiesBeingDisplayed();
+    this.filtersDim.set(Object.fromEntries(Object.keys(this.filtersDim()).map(k => [k, false])));
+    this.filtersTag.set(Object.fromEntries(Object.keys(this.filtersTag()).map(k => [k, false])));
   }
 
   ngOnInit(): void {
@@ -84,18 +138,15 @@ export class MatrixComponent implements OnInit {
     if (!dataStore.activityStore) {
       return;
     }
-    // this.data = this.activities.getData();
-    this.allCategoryNames = dataStore?.activityStore?.getAllCategoryNames() || [];
-    this.allDimensionNames = dataStore?.activityStore?.getAllDimensionNames() || [];
+    const allCategoryNames = dataStore?.activityStore?.getAllCategoryNames() || [];
+    const allDimensionNames = dataStore?.activityStore?.getAllDimensionNames() || [];
 
-    this.MATRIX_DATA = this.buildMatrixData(dataStore.activityStore);
-    this.levels = this.buildLevels(dataStore.getLevelTitles(this.settings.getMaxLevel())); // eslint-disable-line
-    this.filtersTag = this.buildFiltersForTag(dataStore.activityStore.getAllActivities());  // eslint-disable-line
-    this.filtersDim = this.buildFiltersForDim(this.MATRIX_DATA);
-    this.columnNames = ['Category', 'Dimension'];
-    this.columnNames.push(...Object.keys(this.levels));
-
-    this.dataSource.data = deepCopy(this.MATRIX_DATA);
+    this.MATRIX_DATA.set(this.buildMatrixData(dataStore.activityStore, allDimensionNames));
+    const levelsObj = this.buildLevels(dataStore.getLevelTitles(this.settings.getMaxLevel()));
+    this.levels.set(levelsObj);
+    this.filtersTag.set(this.buildFiltersForTag(dataStore.activityStore.getAllActivities()));
+    this.filtersDim.set(this.buildFiltersForDim(this.MATRIX_DATA()));
+    this.columnNames.set(['Category', 'Dimension', ...Object.keys(levelsObj)]);
   }
 
   buildFiltersForTag(activities: Activity[]): Record<string, boolean> {
@@ -130,9 +181,9 @@ export class MatrixComponent implements OnInit {
     return levels;
   }
 
-  buildMatrixData(activityStore: ActivityStore): MatrixRow[] {
+  buildMatrixData(activityStore: ActivityStore, allDimensionNames: string[]): MatrixRow[] {
     let matrixData: MatrixRow[] = [];
-    for (let dim of this.allDimensionNames) {
+    for (let dim of allDimensionNames) {
       let matrixRow: Partial<MatrixRow> = {};
       for (let level = 1; level <= activityStore.getMaxLevel(); level++) {
         let activities: Activity[] = activityStore.getActivities(dim, level);
@@ -148,89 +199,41 @@ export class MatrixComponent implements OnInit {
     return matrixData;
   }
 
-  @ViewChild(MatChipList)
+  @ViewChild(MatChipListbox)
   chipsControl = new FormControl(['chipsControl']);
-  chipList!: MatChipList;
+  chipList!: MatChipListbox;
 
-  toggleTagFilters(chip: MatChip) {
-    chip.toggleSelected();
-    this.filtersTag[chip.value] = chip.selected;
-    console.log(`${perfNow()}: Matrix: Chip flip Tag '${chip.value}: ${chip.selected}`);
-    this.updateActivitiesBeingDisplayed();
+  toggleTagFilters(event: MatChipListboxChange) {
+    const selectedValues: string[] = event.value || [];
+    if (!environment.production) {
+      console.log(`${perfNow()}: Matrix: Tag filter changed: [${selectedValues.join(', ')}]`);
+    }
+    const newFilter: Record<string, boolean> = {};
+    Object.keys(this.filtersTag()).forEach(key => {
+      newFilter[key] = selectedValues.includes(key);
+    });
+    this.filtersTag.set(newFilter);
   }
 
-  toggleDimensionFilters(chip: MatChip) {
-    chip.toggleSelected();
-    this.filtersDim[chip.value] = chip.selected;
-    console.log(`${perfNow()}: Matrix: Chip flip Dim '${chip.value}: ${chip.selected}`);
-    this.updateActivitiesBeingDisplayed();
+  toggleDimensionFilters(event: MatChipListboxChange) {
+    const selectedValues: string[] = event.value || [];
+    if (!environment.production) {
+      console.log(`${perfNow()}: Matrix: Dim filter changed: [${selectedValues.join(', ')}]`);
+    }
+    const newFilter: Record<string, boolean> = {};
+    Object.keys(this.filtersDim()).forEach(key => {
+      newFilter[key] = selectedValues.includes(key);
+    });
+    this.filtersDim.set(newFilter);
   }
 
   @ViewChild('rowInput') rowInput!: ElementRef<HTMLInputElement>;
   @ViewChild('activityInput') activityInput!: ElementRef<HTMLInputElement>;
 
-  updateActivitiesBeingDisplayed(): void {
-    let hasDimFilter = Object.values(this.filtersDim).some(v => v === true);
-    let hasTagFilter = Object.values(this.filtersTag).some(v => v === true);
-
-    if (!hasTagFilter && !hasDimFilter) {
-      this.dataSource.data = this.MATRIX_DATA;
-      return;
-    }
-
-    // Apply dimension filters
-    let itemsStage1: MatrixRow[] = [];
-    if (!hasDimFilter) {
-      itemsStage1 = this.MATRIX_DATA;
-    } else {
-      for (let srcItem of this.MATRIX_DATA) {
-        if (this.filtersDim[srcItem.Dimension]) {
-          itemsStage1.push(srcItem as MatrixRow);
-        }
-      }
-    }
-
-    // Apply tag filters
-    let itemsStage2: MatrixRow[];
-    if (!hasTagFilter) {
-      itemsStage2 = itemsStage1;
-    } else {
-      itemsStage2 = [];
-      for (let srcItem of itemsStage1) {
-        let hasContent = false;
-
-        let trgItem: Partial<MatrixRow> = {};
-        if (hasTagFilter) {
-          // Include activities withing each level, that match the tag filter
-
-          // If tag filter is active, filter activities by tags
-          for (let lvl of Object.keys(this.levels) as LevelKey[]) {
-            let tmp: Activity[];
-            tmp = srcItem[lvl].filter(activity => this.hasTag(activity));
-            if (tmp.length > 0) {
-              trgItem[lvl] = tmp;
-              hasContent = true;
-            }
-          }
-
-          // Only include the row if it has any activities after tag filtering
-          if (hasContent) {
-            // Copy metadata, since the element has remaining activities after filtering
-            trgItem.Category = srcItem.Category;
-            trgItem.Dimension = srcItem.Dimension;
-
-            itemsStage2.push(trgItem as MatrixRow);
-          }
-        }
-      }
-    }
-    this.dataSource.data = itemsStage2;
-  }
-
   hasTag(activity: Activity): boolean {
     if (activity.tags) {
       for (let tagName of activity.tags) {
-        if (this.filtersTag[tagName]) return true;
+        if (this.filtersTag()[tagName]) return true;
       }
     }
     return false;
@@ -253,7 +256,9 @@ export class MatrixComponent implements OnInit {
     const navigationExtras: NavigationExtras = {
       queryParams: { uuid: uuid },
     };
-    console.log(`${perfNow()}: Matrix: Open Details: '${this.dataStore?.activityStore?.getActivityByUuid(uuid).name}'`); // eslint-disable-line
+    console.log(
+      `${perfNow()}: Matrix: Open Details: '${this.dataStore?.activityStore?.getActivityByUuid(uuid).name}'`
+    );
     this.router.navigate([this.Routing], navigationExtras);
   }
 }

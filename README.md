@@ -234,3 +234,6 @@ An example attribution by changing the content:
 > This work is based on the [OWASP DevSecOps Maturity Model](https://dsomm.owasp.org/).
 
 The OWASP DevSecOps Maturity Model and any contributions are Copyright © by Timo Pagel 2017-2022.
+
+# AI Usage
+AI tools were used to assist in drafting and refining source code. All AI-assisted content has been reviewed by maintainers.

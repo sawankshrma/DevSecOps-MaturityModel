@@ -1,14 +1,19 @@
 <div class="progress-container">
-  <mat-slider
-    [min]="0"
-    [max]="steps.length - 1"
-    [step]="1"
-    [value]="currentValue"
-    [tickInterval]="1"
-    (input)="onStepChange($event.value)">
+  <mat-slider [min]="0" [max]="steps.length - 1" [step]="1" showTickMarks #ngSlider
+    ><input
+      matSliderThumb
+      [value]="currentValue"
+      (input)="
+        onStepChange({ source: ngSliderThumb, parent: ngSlider, value: ngSliderThumb.value }.value)
+      "
+      #ngSliderThumb="matSliderThumb" />
   </mat-slider>
-  <span class="step-label">{{ steps[currentValue] }} <!-- eslint-disable-line -->
-    <span *ngIf="currentValue > originalValue"> *</span>
-    <span *ngIf="currentValue < originalValue"> **</span>
+<span class="step-label">{{ steps[currentValue] }} <!-- eslint-disable-line -->
+    @if (currentValue > originalValue) {
+      <span> *</span>
+    }
+    @if (currentValue < originalValue) {
+      <span> **</span>
+    }
   </span>
 </div>

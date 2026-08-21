@@ -1,38 +1,38 @@
 <div class="content">
   <app-top-header section="Matrix"></app-top-header>
-  <mat-form-field class="activity-chip-list">
-    <mat-label>Dimension Filter</mat-label>
-    <mat-chip-list #chipList selectable multiple>
-      <mat-chip
-        #c="matChip"
-        *ngFor="let dim of filtersDim | keyvalue"
-        (click)="toggleDimensionFilters(c)"
-        [value]="dim.key"
-        [selected]="dim.value">
-        {{ dim.key }}
-      </mat-chip>
-    </mat-chip-list>
-  </mat-form-field>
-  <mat-form-field class="activity-chip-list">
-    <mat-label>Activity Tag Filter</mat-label>
-    <mat-chip-list selectable multiple>
-      <mat-chip
-        #c="matChip"
-        *ngFor="let tag of filtersTag | keyvalue"
-        (click)="toggleTagFilters(c)"
-        [value]="tag.key"
-        [selected]="tag.value">
-        {{ tag.key }}
-      </mat-chip>
-    </mat-chip-list>
-  </mat-form-field>
+
+  <div class="chip-filter-section">
+    <label class="chip-filter-label">Dimension Filter</label>
+    <mat-chip-listbox #chipList selectable multiple (change)="toggleDimensionFilters($event)">
+      @for (dim of filtersDim() | keyvalue; track dim.key) {
+        <mat-chip-option [value]="dim.key" [selected]="dim.value">
+          {{ dim.key }}
+        </mat-chip-option>
+      }
+    </mat-chip-listbox>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <div class="chip-filter-section">
+    <label class="chip-filter-label">Activity Tag Filter</label>
+    <mat-chip-listbox selectable multiple (change)="toggleTagFilters($event)">
+      @for (tag of filtersTag() | keyvalue; track tag.key) {
+        <mat-chip-option [value]="tag.key" [selected]="tag.value">
+          {{ tag.key }}
+        </mat-chip-option>
+      }
+    </mat-chip-listbox>
+  </div>
+
+  <mat-divider></mat-divider>
 
   <button class="reset-button" (click)="reset()">RESET</button>
 
   <!-- eslint-disable -->
   <table
     mat-table
-    [dataSource]="dataSource"
+    [dataSource]="dataSource()"
     class="mat-elevation-z8 matrix-table">
 
     <!-- Category Column -->
@@ -40,12 +40,12 @@
       <th mat-header-cell *matHeaderCellDef class="table-small-width">Dimension</th>
       <td mat-cell *matCellDef="let element" class="table-small-width">
         <div class="dim-icon">
-          <mat-icon mat-list-icon color="primary">{{dataStore?.meta?.getIcon(element.Category)}}</mat-icon>
+          <mat-icon mat-list-icon class="matrix-icons" color="primary">{{dataStore.meta?.getIcon(element.Category)}}</mat-icon>
           {{ element.Category }}
         </div>
       </td>
     </ng-container>
-    
+
     <!-- Dimension Column -->
     <ng-container matColumnDef="Dimension">
       <th mat-header-cell *matHeaderCellDef class="table-small-width">Sub-dimension</th>
@@ -53,43 +53,51 @@
         {{ element.Dimension }}
       </td>
     </ng-container>
-    
-    <div *ngFor="let level of levels | keyvalue">
+
+    @for (level of levels() | keyvalue; track level) {
       <ng-container matColumnDef="{{ level.key }}">
         <th mat-header-cell *matHeaderCellDef>{{ level.value }}</th>
         <td mat-cell *matCellDef="let element">
           <ul class="activity-list">
-            <li class="mat-cell-activity" *ngFor="let activity of element[level.key]">
-              <div>
+            @for (activity of element[level.key]; track activity) {
+              <li class="mat-cell-activity">
                 <div>
-                  <a 
-                  class="activity-title"
-                  (click)="navigate(activity.uuid)"
-                  >{{ activity.name }}</a
-                  >
-                </div>
-                <span *ngIf="activity.tags" class="tags-activity">
-                  <span *ngFor="let tag of activity.tags; let i = index">
-                    <span *ngIf="i > 0">, </span>[{{ tag }}]</span
-                  >
-                </span>
-              </div>
-            </li>
-          </ul>
-        </td>
-      </ng-container>
-    </div>
-    <!-- eslint-enable -->
+                  <div>
+                    <a
+                      class="activity-title"
+                      (click)="navigate(activity.uuid)"
+                      >{{ activity.name }}</a
+                      >
+                    </div>
+                    @if (activity.tags) {
+                      <span class="tags-activity">
+                        @for (tag of activity.tags; track tag; let i = $index) {
+                          <span>
+                            @if (i > 0) {
+                              <span>, </span>
+                              }[{{ tag }}]</span
+                              >
+                            }
+                          </span>
+                        }
+                      </div>
+                    </li>
+                  }
+                </ul>
+              </td>
+            </ng-container>
+          }
+          <!-- eslint-enable -->
 
     <!-- No data message -->
     <tr class="mat-row" *matNoDataRow>
-      <td class="mat-cell" [attr.colspan]="columnNames.length">
+      <td class="mat-cell" [attr.colspan]="columnNames().length">
         No activities match the selected filters
       </td>
     </tr>
 
-    <tr mat-header-row *matHeaderRowDef="columnNames"></tr>
-    <tr mat-row *matRowDef="let row; columns: columnNames"></tr>
+    <tr mat-header-row *matHeaderRowDef="columnNames()"></tr>
+    <tr mat-row *matRowDef="let row; columns: columnNames()"></tr>
     <tr mat-footer-row></tr>
   </table>
 </div>

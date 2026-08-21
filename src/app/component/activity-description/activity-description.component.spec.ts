@@ -1,7 +1,7 @@
 import { HttpClient, HttpHandler } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { RouterTestingModule } from '@angular/router/testing';
+import { Component, EventEmitter, Input, Output, ChangeDetectionStrategy } from '@angular/core';
+import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 
@@ -11,8 +11,7 @@ import { MockLoaderService } from 'src/app/service/loader/mock-data-loader.servi
 import { MarkdownText } from 'src/app/model/markdown-text';
 import { Data } from 'src/app/model/activity-store';
 import { isEmptyObj } from 'src/app/util/util';
-import { MaterialModule } from 'src/app/material/material.module';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+
 import { DataStore } from 'src/app/model/data-store';
 
 let mockLoaderService: MockLoaderService;
@@ -48,6 +47,8 @@ let mockData = {
 @Component({
   selector: 'app-dependency-graph',
   template: '',
+  changeDetection: ChangeDetectionStrategy.Eager,
+  standalone: true,
 })
 class DependencyGraphStubComponent {
   @Input() activityName: string = '';
@@ -64,17 +65,17 @@ describe('ActivityDescriptionComponent', () => {
     dataStore = (await mockLoaderService.load()) as DataStore;
     await TestBed.configureTestingModule({
       providers: [
+        provideRouter([]),
         HttpClient,
         HttpHandler,
         { provide: ActivatedRoute, useValue: mockActivatedRoute },
         { provide: LoaderService, useValue: mockLoaderService },
       ],
-      imports: [RouterTestingModule, MaterialModule, NoopAnimationsModule],
-      declarations: [ActivityDescriptionComponent, DependencyGraphStubComponent],
+      imports: [ActivityDescriptionComponent, DependencyGraphStubComponent],
     }).compileComponents();
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     fixture = TestBed.createComponent(ActivityDescriptionComponent);
     component = fixture.componentInstance;
     // Provide the @Input activity before first change detection so ngOnInit uses it
@@ -86,8 +87,6 @@ describe('ActivityDescriptionComponent', () => {
     if (activity) {
       component.activity = activity as any;
     }
-    fixture.detectChanges();
-    await fixture.whenStable();
     fixture.detectChanges();
   });
 
@@ -133,7 +132,9 @@ describe('ActivityDescriptionComponent', () => {
     expect(HTMLElement.querySelector('#risk')?.textContent).toContain(testRisk);
     expect(HTMLElement.querySelector('#measure')?.textContent).toContain(testMeasure);
     expect(HTMLElement.querySelector('#assessment')?.textContent).toContain(testAssessment);
-    expect(HTMLElement.querySelector('#implementationGuide')?.textContent).toContain(testImplementationGuide); // eslint-disable-line
+    expect(HTMLElement.querySelector('#implementationGuide')?.textContent).toContain(
+      testImplementationGuide
+    );
   });
 
   /*

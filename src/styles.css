@@ -20,25 +20,8 @@ h1, h2, h3 {
   font-weight: 400;
 }
 
-.mat-typography h1.mat-display-1 {
+.mat-typography h1.mat-headline-4 {
   margin: 0;
-}
-
-/* Slider styling */
-.mat-slider-track-background {
-  background-color: var(--slider-track) !important;
-}
-
-.mat-slider-track-fill {
-  background-color: var(--slider-primary) !important;
-}
-
-.mat-slider-thumb {
-  background-color: var(--slider-thumb) !important;
-}
-
-.mat-slider-thumb-label {
-  background-color: var(--slider-thumb) !important;
 }
 
 .userday table :is(td, th) {
@@ -67,9 +50,6 @@ h1, h2, h3 {
     max-width: 40rem;
 }
 
-.compact-tooltip {
-  transform: translateY(-10px) !important;
-}
 * {
   scrollbar-color: #9F9F9F #2C2C2C;
 }

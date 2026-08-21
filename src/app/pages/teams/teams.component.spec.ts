@@ -1,13 +1,13 @@
-import { HttpClientModule, HttpHandler } from '@angular/common/http';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { HttpHandler, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
-import { MatChip } from '@angular/material/chips';
+import { provideRouter } from '@angular/router';
 
 import { TeamsComponent } from './teams.component';
 import { ModalMessageComponent } from 'src/app/component/modal-message/modal-message.component';
 import { LoaderService } from 'src/app/service/loader/data-loader.service';
 import { MockLoaderService } from 'src/app/service/loader/mock-data-loader.service';
+import { DataStore } from 'src/app/model/data-store';
 import { isEmptyObj, perfNow } from 'src/app/util/util';
 
 let mockLoaderService: MockLoaderService;
@@ -15,29 +15,30 @@ let mockLoaderService: MockLoaderService;
 describe('TeamsComponent', () => {
   let component: TeamsComponent;
   let fixture: ComponentFixture<TeamsComponent>;
+  let mockDataStore: DataStore;
   mockLoaderService = new MockLoaderService({});
 
   beforeEach(async () => {
-    /* eslint-disable */
-    // await mockLoaderService.load();
+    // Pre-load data BEFORE component creation to avoid async NG0100
+    mockDataStore = (await mockLoaderService.load()) as DataStore;
+
     await TestBed.configureTestingModule({
+      imports: [TeamsComponent],
       providers: [
-        HttpClientTestingModule,
+        provideRouter([]),
+        provideHttpClientTesting(),
         { provide: ModalMessageComponent, useValue: {} },
         { provide: LoaderService, useValue: mockLoaderService },
+        provideHttpClient(withInterceptorsFromDi()),
       ],
-      imports: [RouterTestingModule, HttpClientModule],
-      declarations: [TeamsComponent, MatChip],
     }).compileComponents();
-    /* eslint-enable */
   });
 
-  beforeEach(async () => {
+  beforeEach(() => {
     fixture = TestBed.createComponent(TeamsComponent);
     component = fixture.componentInstance;
-
-    fixture.detectChanges();
-    await fixture.whenStable();
+    // Set data synchronously BEFORE first change detection
+    component.setYamlData(mockDataStore);
     fixture.detectChanges();
   });
 
@@ -46,8 +47,8 @@ describe('TeamsComponent', () => {
   });
 
   it('check loading teams', () => {
-    expect(component.teams).toContain('Team A');
-    expect(component.teams).toContain('Team B');
-    expect(component.teamGroups?.['AB']).toBeDefined();
+    expect(component.teams()).toContain('Team A');
+    expect(component.teams()).toContain('Team B');
+    expect(component.teamGroups()?.['AB']).toBeDefined();
   });
 });

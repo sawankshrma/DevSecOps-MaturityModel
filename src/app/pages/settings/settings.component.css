@@ -34,7 +34,7 @@
   padding: 0 1rem;
 }
 
-.mat-slider-horizontal {
+.mat-mdc-slider {
   max-width: 100px;
   width: 100px;
   min-width: 80px;
@@ -74,12 +74,12 @@
   gap: 0.3em;
 }
 
-.progress-definitions-grid ::ng-deep .mat-form-field-wrapper {
-  padding-bottom: 0;
+.progress-definitions-grid ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
 }
 
-.progress-definitions-grid ::ng-deep .mat-form-field-suffix {
-  top: 0;
+.progress-definitions-grid ::ng-deep .mat-mdc-form-field-icon-suffix {
+  align-self: center;
 }
 
 .grid-cell.progress-key {
@@ -182,13 +182,13 @@ mat-icon.mandatory-icon {
 .settings-about-section {
   margin-top: 1rem;
 }
-.settings-about-section .mat-card-header {
+.settings-about-section .mat-mdc-card-header {
   padding-bottom: 0.25rem;
 }
-.settings-about-section .mat-card-title {
+.settings-about-section .mat-mdc-card-title {
   font-size: 1.1rem;
 }
-.settings-about-section .mat-card-subtitle {
+.settings-about-section .mat-mdc-card-subtitle {
   color: #666;
   font-size: 0.9rem;
 }
@@ -247,4 +247,7 @@ mat-icon.mandatory-icon {
 .action-link {
   margin-left: 0.5rem;
   font-weight: 500;
+}
+.progress-definitions-section, .settings-about-section {
+  padding: 10px 0 0 20px;
 }

@@ -1,7 +1,18 @@
-import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { EvidenceEntry, EvidenceStore } from '../../model/evidence-store';
 import { TeamGroups } from '../../model/types';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
+import { MatOptionModule } from '@angular/material/core';
+import { MatSelectModule } from '@angular/material/select';
+import { FormsModule } from '@angular/forms';
+import { MatInputModule } from '@angular/material/input';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+
+import { TeamSelectorComponent } from '../team-selector/team-selector.component';
 
 export interface AddEvidenceModalData {
   activityUuid: string;
@@ -13,8 +24,25 @@ export interface AddEvidenceModalData {
   selector: 'app-add-evidence-modal',
   templateUrl: './add-evidence-modal.component.html',
   styleUrls: ['./add-evidence-modal.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [
+    MatDialogModule,
+    TeamSelectorComponent,
+    MatFormFieldModule,
+    MatDividerModule,
+    MatInputModule,
+    FormsModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatIconModule,
+  ],
 })
 export class AddEvidenceModalComponent {
+  dialogRef = inject<MatDialogRef<AddEvidenceModalComponent>>(MatDialogRef);
+  data = inject<AddEvidenceModalData>(MAT_DIALOG_DATA);
+
   activityUuid: string;
   allTeams: string[];
   teamGroups: TeamGroups;
@@ -34,10 +62,9 @@ export class AddEvidenceModalComponent {
 
   attachmentTypes: string[] = ['document', 'image', 'link'];
 
-  constructor(
-    public dialogRef: MatDialogRef<AddEvidenceModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: AddEvidenceModalData
-  ) {
+  constructor() {
+    const data = this.data;
+
     this.activityUuid = data.activityUuid;
     this.allTeams = data.allTeams;
     this.teamGroups = data.teamGroups || {};

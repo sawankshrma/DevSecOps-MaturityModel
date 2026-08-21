@@ -1,7 +1,25 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { SidenavButtonsComponent } from './sidenav-buttons.component';
+import { ThemeService } from '../../service/theme.service';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+
+class MockThemeService {
+  theme = signal<string>('light');
+  initTheme() {}
+  getTheme() {
+    return this.theme();
+  }
+  setTheme(theme: string) {
+    this.theme.set(theme);
+  }
+  toggleTheme() {
+    this.theme.set(this.theme() === 'light' ? 'dark' : 'light');
+  }
+}
 
 describe('SidenavButtonsComponent', () => {
   let component: SidenavButtonsComponent;
@@ -9,7 +27,13 @@ describe('SidenavButtonsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [SidenavButtonsComponent],
+      imports: [SidenavButtonsComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ThemeService, useClass: MockThemeService },
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting(),
+      ],
     }).compileComponents();
   });
 
@@ -32,7 +56,7 @@ describe('SidenavButtonsComponent', () => {
 
   it('check for navigation names being shown in the same order as options array', () => {
     const HTMLElement: HTMLElement = fixture.nativeElement;
-    const NavigationList = HTMLElement.querySelectorAll('a > h3')!;
+    const NavigationList = HTMLElement.querySelectorAll('a h3')!;
     let NavigationNamesBeingShown = [];
     for (var x = 0; x < NavigationList.length; x += 1) {
       NavigationNamesBeingShown.push(NavigationList[x].textContent);

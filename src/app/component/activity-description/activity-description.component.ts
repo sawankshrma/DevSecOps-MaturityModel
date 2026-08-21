@@ -9,18 +9,34 @@ import {
   EventEmitter,
   OnInit,
   HostListener,
+  inject,
+  ChangeDetectionStrategy,
 } from '@angular/core';
-import { MatAccordion } from '@angular/material/expansion';
+import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
 import { Activity } from '../../model/activity-store';
 import { LoaderService } from '../../service/loader/data-loader.service';
 import { TeamName, ProgressTitle } from '../../model/types';
+import { EvidencePanelComponent } from '../evidence-panel/evidence-panel.component';
+import { DependencyGraphComponent } from '../dependency-graph/dependency-graph.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-activity-description',
   templateUrl: './activity-description.component.html',
   styleUrls: ['./activity-description.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [
+    MatIconModule,
+    MatButtonModule,
+    MatExpansionModule,
+    DependencyGraphComponent,
+    EvidencePanelComponent,
+  ],
 })
 export class ActivityDescriptionComponent implements OnInit, OnChanges {
+  private loader = inject(LoaderService);
+
   @Input() activity: Activity | null = null;
   @Input() iconName: string = '';
   @Input() showCloseButton: boolean = false;
@@ -42,8 +58,6 @@ export class ActivityDescriptionComponent implements OnInit, OnChanges {
   progressTitlesWithTeams: ProgressTitle[] = [];
 
   @ViewChildren(MatAccordion) accordion!: QueryList<MatAccordion>;
-
-  constructor(private loader: LoaderService) {}
 
   ngOnInit() {
     // Set activity data if provided
@@ -73,12 +87,19 @@ export class ActivityDescriptionComponent implements OnInit, OnChanges {
     // Get datastore for labels
     const dataStore = this.loader.datastore;
     if (dataStore) {
-      /* eslint-disable */
-      this.KnowledgeLabel = dataStore.getMetaString('knowledgeLabels', activity.difficultyOfImplementation.knowledge - 1);
-      this.TimeLabel = dataStore.getMetaString('labels', activity.difficultyOfImplementation.time - 1);
-      this.ResourceLabel = dataStore.getMetaString('labels', activity.difficultyOfImplementation.resources - 1);
+      this.KnowledgeLabel = dataStore.getMetaString(
+        'knowledgeLabels',
+        activity.difficultyOfImplementation.knowledge - 1
+      );
+      this.TimeLabel = dataStore.getMetaString(
+        'labels',
+        activity.difficultyOfImplementation.time - 1
+      );
+      this.ResourceLabel = dataStore.getMetaString(
+        'labels',
+        activity.difficultyOfImplementation.resources - 1
+      );
       this.UsefulnessLabel = dataStore.getMetaString('labels', activity.usefulness - 1);
-      /* eslint-enable */
 
       // Get teams that have implemented this activity
       this.updateTeamsImplemented();

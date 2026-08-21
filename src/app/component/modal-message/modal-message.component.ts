@@ -1,20 +1,29 @@
-import { Inject, Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
   MatDialog,
   MatDialogConfig,
+  MatDialogModule,
 } from '@angular/material/dialog';
-import * as md from 'markdown-it';
+import md from 'markdown-it';
 import { MarkdownText } from 'src/app/model/markdown-text';
 import { NotificationService } from 'src/app/service/notification.service';
+import { dialogSizeConfig } from 'src/app/util/dialog-sizes';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-modal-message',
   templateUrl: './modal-message.component.html',
   styleUrls: ['./modal-message.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [MatDialogModule, MatButtonModule],
 })
 export class ModalMessageComponent implements OnInit {
+  dialog = inject(MatDialog);
+  dialogRef = inject<MatDialogRef<ModalMessageComponent>>(MatDialogRef);
+  private notificationService = inject(NotificationService);
+
   data: DialogInfo;
   markdown: md = md();
 
@@ -22,16 +31,12 @@ export class ModalMessageComponent implements OnInit {
   DSOMM_url: string = `${this.DSOMM_host}/DevSecOps-MaturityModel-data`;
   meassageTemplates: Record<string, DialogInfo> = {};
 
-  constructor(
-    public dialog: MatDialog,
-    public dialogRef: MatDialogRef<ModalMessageComponent>,
-    @Inject(MAT_DIALOG_DATA) data: DialogInfo,
-    private notificationService: NotificationService
-  ) {
+  constructor() {
+    const data = inject<DialogInfo>(MAT_DIALOG_DATA);
+
     this.data = data;
   }
 
-  // eslint-disable-next-line @angular-eslint/no-empty-lifecycle-method
   ngOnInit(): void {
     this.notificationService.message$.subscribe(({ title, message }) => {
       this.openDialog(new DialogInfo(message, title));
@@ -57,6 +62,7 @@ export class ModalMessageComponent implements OnInit {
     dialogConfig.disableClose = true;
     dialogConfig.data = dialogInfo;
     dialogConfig.autoFocus = false;
+    Object.assign(dialogConfig, dialogSizeConfig('md'));
     this.dialogRef = this.dialog.open(ModalMessageComponent, dialogConfig);
     return this.dialogRef;
   }

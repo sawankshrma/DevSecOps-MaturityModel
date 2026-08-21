@@ -1,21 +1,33 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  inject,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { EvidenceEntry } from '../../model/evidence-store';
 import { LoaderService } from '../../service/loader/data-loader.service';
+import { MatIconModule } from '@angular/material/icon';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-evidence-panel',
   templateUrl: './evidence-panel.component.html',
   styleUrls: ['./evidence-panel.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [MatExpansionModule, MatIconModule, DatePipe],
 })
 export class EvidencePanelComponent implements OnChanges {
+  private loader = inject(LoaderService);
+
   @Input() activityUuid: string = '';
   @Input() expanded: boolean = false;
 
   evidenceEntries: EvidenceEntry[] = [];
   evidenceByTeam: Map<string, EvidenceEntry[]> = new Map();
   teamsWithEvidence: string[] = [];
-
-  constructor(private loader: LoaderService) {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['activityUuid'] && this.activityUuid) {

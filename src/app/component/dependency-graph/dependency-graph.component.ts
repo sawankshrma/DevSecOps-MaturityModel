@@ -1,4 +1,13 @@
-import { Component, OnInit, Input, ElementRef, SimpleChanges, OnChanges } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  ElementRef,
+  SimpleChanges,
+  OnChanges,
+  inject,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import * as d3 from 'd3';
 import { LoaderService } from '../../service/loader/data-loader.service';
 import { Activity } from 'src/app/model/activity-store';
@@ -37,8 +46,13 @@ interface ThemeColors {
   selector: 'app-dependency-graph',
   templateUrl: './dependency-graph.component.html',
   styleUrls: ['./dependency-graph.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  standalone: true,
 })
 export class DependencyGraphComponent implements OnInit, OnChanges {
+  private loader = inject(LoaderService);
+  private themeService = inject(ThemeService);
+
   css: CSSStyleDeclaration = getComputedStyle(document.body);
   themeColors: Partial<ThemeColors> = {};
   theme: string;
@@ -51,7 +65,7 @@ export class DependencyGraphComponent implements OnInit, OnChanges {
 
   @Output() activityClicked = new EventEmitter<string>();
 
-  constructor(private loader: LoaderService, private themeService: ThemeService) {
+  constructor() {
     this.theme = this.themeService.getTheme();
     this.setThemeColors(this.theme);
   }
@@ -80,14 +94,16 @@ export class DependencyGraphComponent implements OnInit, OnChanges {
   }
 
   setThemeColors(theme: string) {
-    /* eslint-disable */
-      this.themeColors.mainNodeFill = this.css.getPropertyValue('--heatmap-filled').trim();
-      this.themeColors.mainNodeColor = this.css.getPropertyValue('--text-primary').trim();
-      this.themeColors.linkColor = this.css.getPropertyValue('--dependency-link').trim();
-      this.themeColors.borderColor = this.css.getPropertyValue('--dependency-border').trim();
-      this.themeColors.predecessorFill = this.css.getPropertyValue('--dependency-predecessor-fill').trim();
-      this.themeColors.successorFill = this.css.getPropertyValue('--dependency-successor-fill').trim();
-      /*eslint-enable */
+    this.themeColors.mainNodeFill = this.css.getPropertyValue('--heatmap-filled').trim();
+    this.themeColors.mainNodeColor = this.css.getPropertyValue('--text-primary').trim();
+    this.themeColors.linkColor = this.css.getPropertyValue('--dependency-link').trim();
+    this.themeColors.borderColor = this.css.getPropertyValue('--dependency-border').trim();
+    this.themeColors.predecessorFill = this.css
+      .getPropertyValue('--dependency-predecessor-fill')
+      .trim();
+    this.themeColors.successorFill = this.css
+      .getPropertyValue('--dependency-successor-fill')
+      .trim();
 
     this.generateGraph();
   }
@@ -175,16 +191,33 @@ export class DependencyGraphComponent implements OnInit, OnChanges {
     svg.selectAll('*').remove();
 
     // Now that rectWidth is set on each node, set up the simulation
-    /* eslint-disable */
+
     this.simulation = d3
       .forceSimulation()
       // .alphaMin(0.11)
-      .force('link', d3.forceLink().id((d: any) => { return d.id; }).strength(0.1))
-      .force('x', d3.forceX((d: any) => { return self.initX(d) }).strength(5))
+      .force(
+        'link',
+        d3
+          .forceLink()
+          .id((d: any) => {
+            return d.id;
+          })
+          .strength(0.1)
+      )
+      .force(
+        'x',
+        d3
+          .forceX((d: any) => {
+            return self.initX(d);
+          })
+          .strength(5)
+      )
       .force('charge', d3.forceManyBody().strength(-30))
-      .force('collide', d3.forceCollide((d: any) => 30))
+      .force(
+        'collide',
+        d3.forceCollide((d: any) => 30)
+      )
       .force('center', d3.forceCenter(0, 0));
-    /* eslint-enable */
 
     svg
       .append('defs')

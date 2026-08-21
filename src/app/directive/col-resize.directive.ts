@@ -1,17 +1,19 @@
-import { Directive, ElementRef, Renderer2, OnInit } from '@angular/core';
+import { Directive, ElementRef, Renderer2, OnInit, inject } from '@angular/core';
 
 @Directive({
   selector: '[appColResize]',
+  standalone: true,
 })
 export class ColResizeDirective implements OnInit {
+  private el = inject(ElementRef);
+  private renderer = inject(Renderer2);
+
   private startX = 0;
   private startWidth = 0;
   private th!: HTMLElement;
 
   private mouseMoveListener: (() => void) | null = null;
   private mouseUpListener: (() => void) | null = null;
-
-  constructor(private el: ElementRef, private renderer: Renderer2) {}
 
   ngOnInit(): void {
     this.th = this.el.nativeElement;

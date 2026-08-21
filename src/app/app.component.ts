@@ -1,23 +1,46 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
+import { Component, OnInit, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ThemeService } from './service/theme.service';
 import { TitleService } from './service/title.service';
+import { SidenavButtonsComponent } from './component/sidenav-buttons/sidenav-buttons.component';
+import { MatSidenavModule } from '@angular/material/sidenav';
+
+import { LogoComponent } from './component/logo/logo.component';
+import { RouterLink, RouterOutlet } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    RouterLink,
+    LogoComponent,
+    MatSidenavModule,
+    SidenavButtonsComponent,
+    RouterOutlet,
+  ],
 })
-export class AppComponent implements OnInit, OnDestroy {
-  title = '';
+export class AppComponent implements OnInit {
+  private themeService = inject(ThemeService);
+  private titleService = inject(TitleService);
+
   defaultTitle = '';
-  subtitle = '';
   menuIsOpen: boolean = true;
   sidenavWidth: string = '250px';
 
-  private destroy$ = new Subject<void>();
+  readonly title = computed(() => this.titleService.titleInfo()?.dimension || '');
+  readonly subtitle = computed(() => {
+    const info = this.titleService.titleInfo();
+    return info?.level ? 'Level ' + info.level : '';
+  });
 
-  constructor(private themeService: ThemeService, private titleService: TitleService) {
+  constructor() {
     this.themeService.initTheme();
   }
 
@@ -31,17 +54,6 @@ export class AppComponent implements OnInit, OnDestroy {
     } else {
       this.sidenavWidth = '250px';
     }
-
-    // Subscribe to title changes
-    this.titleService.titleInfo$.pipe(takeUntil(this.destroy$)).subscribe(titleInfo => {
-      this.title = titleInfo?.dimension || '';
-      this.subtitle = titleInfo?.level ? 'Level ' + titleInfo?.level : '';
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   toggleMenu(): void {

@@ -1,6 +1,5 @@
 import { HttpClient, HttpHandler } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatAutocomplete } from '@angular/material/autocomplete';
 
 import { MappingComponent } from './mapping.component';
 import { ModalMessageComponent } from 'src/app/component/modal-message/modal-message.component';
@@ -13,13 +12,12 @@ describe('MappingComponent', () => {
   beforeEach(async () => {
     /* eslint-disable */
     await TestBed.configureTestingModule({
-      declarations: [MappingComponent, MatAutocomplete],
-      imports: [MatDialogModule],
-      providers: [HttpClient,
+    imports: [MatDialogModule, MappingComponent],
+    providers: [HttpClient,
         HttpHandler,
         { provide: ModalMessageComponent, useValue: {} },
-      ],
-    }).compileComponents();
+    ]
+}).compileComponents();
     /* eslint-enable */
   });
 

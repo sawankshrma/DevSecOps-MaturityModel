@@ -1,3 +1,13 @@
+# [5.0.0](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/compare/v4.7.0...v5.0.0) (2026-08-21)
+
+
+* Update README.md ([3bb28e3](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/commit/3bb28e3cfca319e8f6acba4b5f87e56d29e871f6))
+
+
+### BREAKING CHANGES
+
+* release
+
 # [4.7.0](https://github.com/devsecopsmaturitymodel/DevSecOps-MaturityModel/compare/v4.6.0...v4.7.0) (2026-08-21)
 
 
